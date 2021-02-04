@@ -90,7 +90,7 @@ async function modifyPrefixList(ec2, prefixListId, currentVersion, oldCidr, newC
 
 
 const regionLoop = async _ => {
-    console.log('Starting...');
+    console.log(`Starting hunt for ${PREFIX_LIST_NAME}...`);
 
     console.log('Getting current Public IP...');
     const newCidrCall = await getMyPublicIP();
