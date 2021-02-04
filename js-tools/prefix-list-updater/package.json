@@ -1,0 +1,25 @@
+{
+  "name": "prefix-list-updater",
+  "version": "0.0.1",
+  "description": "Simple script to update a given prefix-list name across all AWS regions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gerrardcowburn/sandpit.git"
+  },
+  "author": "Gerrard Cowburn",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gerrardcowburn/sandpit/issues"
+  },
+  "homepage": "https://github.com/gerrardcowburn/sandpit#readme",
+  "dependencies": {
+    "@aws-sdk/client-ec2": "^3.4.1",
+    "async": "^3.2.0",
+    "axios": "^0.21.1",
+    "moment": "^2.29.1"
+  }
+}
