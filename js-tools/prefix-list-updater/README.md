@@ -14,7 +14,9 @@ Secure random stuff I chuck in AWS to reduce the attack surface for trolls scann
 1. Finds the last updated IP and replaces it with the current one
 
 ### Usage
-
+1. Download the script / clone the repo
+1. Edit index.js to update the PREFIX_LIST_NAME and REGIONS variables
+1. Install package dependencies & run the script
 ```
 $ npm install
 $ node index.js
