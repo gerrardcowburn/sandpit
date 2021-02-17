@@ -114,26 +114,30 @@ const regionLoop = async _ => {
             const oldCidr = currentPrefixListContent.Entries.filter(entry => entry.Description.match(/#autoupdate.*/));
 
             if (oldCidr.length == 1) {
-                console.log(`Found ${oldCidr[0].Cidr} in ${currentPrefixList.PrefixLists[0].PrefixListId}, updating...`)
-                const modifyPrefixListResponse = await modifyPrefixList(ec2, currentPrefixList.PrefixLists[0].PrefixListId, currentPrefixList.PrefixLists[0].Version, oldCidr[0].Cidr, newCidr);
+                if (oldCidr[0].Cidr == newCidr) {
+                    console.log(`No change in CIDR.  Skipping...`);
+                } else {
+                    console.log(`Found ${oldCidr[0].Cidr} in ${currentPrefixList.PrefixLists[0].PrefixListId}, updating...`)
+                    const modifyPrefixListResponse = await modifyPrefixList(ec2, currentPrefixList.PrefixLists[0].PrefixListId, currentPrefixList.PrefixLists[0].Version, oldCidr[0].Cidr, newCidr);
 
-                if (CONFIRMDONE) {
-                    console.log('Waiting for confirmation...');
-    
-                    await wait(2000);
-    
-                    const updatedPrefixListContent = await getPrefixListContent(ec2, currentPrefixList.PrefixLists[0].PrefixListId);
+                    if (CONFIRMDONE) {
+                        console.log('Waiting for confirmation...');
+        
+                        await wait(2000);
+        
+                        const updatedPrefixListContent = await getPrefixListContent(ec2, currentPrefixList.PrefixLists[0].PrefixListId);
 
-                    const updatedCidr = updatedPrefixListContent.Entries.filter(entry => entry.Description.match(/#autoupdate.*/));
+                        const updatedCidr = updatedPrefixListContent.Entries.filter(entry => entry.Description.match(/#autoupdate.*/));
 
-                    if (updatedCidr.length == 1) {
-                        if (updatedCidr[0].Cidr == newCidr) {
-                            console.log(`Successfully updated ${currentPrefixList.PrefixLists[0].PrefixListId} in ${REGION}`);
+                        if (updatedCidr.length == 1) {
+                            if (updatedCidr[0].Cidr == newCidr) {
+                                console.log(`Successfully updated ${currentPrefixList.PrefixLists[0].PrefixListId} in ${REGION}`);
+                            } else {
+                                console.log(`Update failed for ${currentPrefixList.PrefixLists[0].PrefixListId} in ${REGION}`)
+                            }
                         } else {
-                            console.log(`Update failed for ${currentPrefixList.PrefixLists[0].PrefixListId} in ${REGION}`)
+                            console.log(`Found ${updatedCidr.length} #autoupdated CIDRs in ${currentPrefixList.PrefixLists[0].PrefixListId} after update, please investigate...`)
                         }
-                    } else {
-                        console.log(`Found ${updatedCidr.length} #autoupdated CIDRs in ${currentPrefixList.PrefixLists[0].PrefixListId} after update, please investigate...`)
                     }
                 }
             } else {
