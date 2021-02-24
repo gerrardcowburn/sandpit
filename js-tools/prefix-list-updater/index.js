@@ -5,11 +5,69 @@ const { EC2Client,
 const moment = require('moment');
 const axios = require('axios');
 const yargs = require('yargs');
-    
-const PREFIX_LIST_NAME = "gc-access"; //Name of target prefix list
-const REGIONS = ['us-east-2', 'us-east-1', 'us-west-2']; //List of Regions to search through when making updates
 
+const argv = yargs
+    .command('refresh','Refresh current public IP /32')
+    .command('add','Add new prefix-list entry', {
+        cidra: {
+            description: 'The CIDR range to add',
+            alias: 'a',
+            type: 'string'
+        }
+    })
+    .command('remove','Remove existing prefix-list entry', {
+        cidrr: {
+            description: 'The CIDR range to remove',
+            alias: 'r',
+            type: 'string'
+        }
+    })
+    .option('prefixlist', {
+        description: 'The prefix-list name to update',
+        alias: 'p',
+        type: 'string'
+    })
+    .help()
+    .alias('help', 'h')
+    .argv;
+
+const PREFIX_LIST_NAME = argv.p ? argv.p : argv.prefixlist ? argv.prefixlist : "gc-access"; //Name of target prefix list
+const REGIONS = ['us-east-2', 'us-east-1', 'us-west-2']; //List of Regions to search through when making updates
 const CONFIRMDONE = true; //Tells the script whether to wait 2 seconds after attempting an update to validate success, or whether to just crack on and assume everything's fine
+
+const main = async function (argv) {
+    if (argv._.includes('add')) {
+        const mode = "add";
+        const cidr = argv.cidra ? argv.cidra : argv.a
+        if (cidr) {
+            console.log(`Adding CIDR ${cidr}...`);
+            await regionLoop(mode, cidr);
+        } else {
+            console.log(`CIDR not provided for addition, please check`);
+        }
+    }
+    if (argv._.includes('remove')) {
+        const mode = "remove"
+        const cidr = argv.cidrr ? argv.cidrr : argv.r
+        if (cidr) {
+            console.log(`Removing CIDR ${cidr}...`);
+            await regionLoop(mode, cidr);
+        } else {
+            console.log(`CIDR not provided for removal, please check`);
+        }
+    }
+    if (argv._.includes('refresh') || argv._.length == 0) {
+        const mode = "refresh";
+        console.log(`Refreshing...`);
+
+        console.log('Getting current Public IP...');
+        const newCidrCall = await getMyPublicIP();
+        const cidr = newCidrCall.data.ip + '/32';
+        console.log(`Current Public IP identified as ${cidr}`);
+
+        await regionLoop(mode, cidr);
+    }
+}
 
 function wait (timeout) {
     return new Promise((resolve) => {
@@ -218,61 +276,6 @@ const regionLoop = async (mode, cidr) => {
 
     console.log('Done!');
 
-}
-
-
-const argv = yargs
-    .command('refresh','Refresh current public IP /32')
-    .command('add','Add new prefix-list entry', {
-        cidra: {
-            description: 'The CIDR range to add',
-            alias: 'a',
-            type: 'string'
-        }
-    })
-    .command('remove','Remove existing prefix-list entry', {
-        cidrr: {
-            description: 'The CIDR range to remove',
-            alias: 'r',
-            type: 'string'
-        }
-    })
-    .help()
-    .alias('help', 'h')
-    .argv;
-
-const main = async function (argv) {
-    if (argv._.includes('add')) {
-        const mode = "add";
-        const cidr = argv.cidra ? argv.cidra : argv.a
-        if (cidr) {
-            console.log(`Adding CIDR ${cidr}...`);
-            await regionLoop(mode, cidr);
-        } else {
-            console.log(`CIDR not provided for addition, please check`);
-        }
-    }
-    if (argv._.includes('remove')) {
-        const mode = "remove"
-        const cidr = argv.cidrr ? argv.cidrr : argv.r
-        if (cidr) {
-            console.log(`Removing CIDR ${cidr}...`);
-            await regionLoop(mode, cidr);
-        } else {
-            console.log(`CIDR not provided for removal, please check`);
-        }
-    }
-    if (argv._.includes('refresh') || argv._.length == 0) {
-        const mode = "refresh";
-        console.log(`Refreshing...`);
-
-        console.log('Getting current Public IP...');
-        const newCidrCall = await getMyPublicIP();
-        const cidr = newCidrCall.data.ip + '/32';
-        console.log(`Current Public IP identified as ${cidr}`);
-
-        await regionLoop(mode, cidr);
-    }
 }
 
 main(argv);
