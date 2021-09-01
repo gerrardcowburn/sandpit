@@ -1,12 +1,12 @@
 # Route 53 Application Recovery Controller Blog Post Code
 
-This CloudFormation Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller.
-It is the third part of a three part CloudFormation Deployment.  It has dependencies on the preceeding (1) base infrastructure deployment, and (2) Route 53ARC deployment.
-It should be deployed as a StackSet with us-east-1 as the first region and us-west-2 as the second region, within a single AWS account.
-It will deploy the following Lambda functions:
-a. Infrastructure Status Dashboard Lambda, serving a basic web page via an Internet facing ALB
-b. Database Failover Lambda, running on a scheduled rule to carry out database failovers when required
-It will also deploy all required supporting components such as Lambda Layers, Application Load Balancers, Security Groups, Roles, Policies, LambdaPermissions, and CloudWatch Scheduled Rules.
+This CloudFormation Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller.  
+It is the third part of a three part CloudFormation Deployment.  It has dependencies on the preceeding (1) base infrastructure deployment, and (2) Route 53ARC deployment.  
+It should be deployed as a StackSet with us-east-1 as the first region and us-west-2 as the second region, within a single AWS account.  
+It will deploy the following Lambda functions:  
+a. Infrastructure Status Dashboard Lambda, serving a basic web page via an Internet facing ALB  
+b. Database Failover Lambda, running on a scheduled rule to carry out database failovers when required  
+It will also deploy all required supporting components such as Lambda Layers, Application Load Balancers, Security Groups, Roles, Policies, LambdaPermissions, and CloudWatch Scheduled Rules.  
 
 Technical Prerequisites:
 * Perform the `Build Activities` outlined below.  This simply zips the two Lambda scripts included in this folder into zip files for use during Lambda deployment.
