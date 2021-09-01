@@ -4,9 +4,9 @@ This CloudFormation Template supports the requirements of an AWS Blog Post on Ro
 It is the first part of a three part CloudFormation Deployment.  It is intended to be followed by (2) Route53 ARC and (3) supporting Lambda CloudFormation deployments.
 It should be deployed as a StackSet with us-east-1 as the first region and us-west-2 as the second region, within a single AWS account.
 It uses the CloudFormation Nested Stack approach, with 3 child stacks to deploy the following components across each target region:
-A) Network Stack - Base level infrastructure including public/private subnets, Internet gateway, NAT gateway, route tables, etc.
-B) Application Stack - Application level infrastructure including Network Load Balancers, AutoScaling Groups, etc.
-C) Database Stack - Database level infrastructure including KMS Keys, Secrets, Database clusters and nodes, etc.
+a. Network Stack - Base level infrastructure including public/private subnets, Internet gateway, NAT gateway, route tables, etc.
+b. Application Stack - Application level infrastructure including Network Load Balancers, AutoScaling Groups, etc.
+c. Database Stack - Database level infrastructure including KMS Keys, Secrets, Database clusters and nodes, etc.
 
 Technical Prerequisites:
 * The three nested stack templates, `stack-network.yml`, `stack-app.yml`, and `stack-network.yml` must be uploaded to an S3 Bucket which is either public, or accessible via the IAM credentials used for the StackSet deployment.
