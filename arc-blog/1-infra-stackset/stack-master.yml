@@ -51,7 +51,6 @@ Resources:
         - TemplatePath: !FindInMap [StaticParameters, StaticParameters, TemplatePath]
       Parameters:
         ProjectId: !Ref ProjectId
-        Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
         VpcCidr: !FindInMap 
           - RegionalParameters 
           - !Ref AWS::Region
