@@ -175,9 +175,6 @@ const constructResponseDynamicScript = () => {
     responseScript += `    response.responseBody == "${lambdaParams.deploymentRegions[0]+'a'}" ? row.innerHTML += \`<td class=\"p\-2\">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";`;
     responseScript += `    response.responseBody == "${lambdaParams.deploymentRegions[0]+'b'}" ? row.innerHTML += \`<td class=\"p\-2\">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";`;
     responseScript += `    response.responseBody == "${lambdaParams.deploymentRegions[0]+'c'}" ? row.innerHTML += \`<td class=\"p\-2\">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";`;
-    responseScript += `    response.responseBody == "${lambdaParams.deploymentRegions[1]+'a'}" ? row.innerHTML += \`<td class=\"p\-2\">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";`;
-    responseScript += `    response.responseBody == "${lambdaParams.deploymentRegions[1]+'b'}" ? row.innerHTML += \`<td class=\"p\-2\">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";`;
-    responseScript += `    response.responseBody == "${lambdaParams.deploymentRegions[1]+'c'}" ? row.innerHTML += \`<td class=\"p\-2\">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";`;
     responseScript += `    response.responseBody == "Maintenance" ? row.innerHTML += \`<td class=\"p\-2\">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";`;
     responseScript += "};";
     responseScript += "const removeRow = () => {";
