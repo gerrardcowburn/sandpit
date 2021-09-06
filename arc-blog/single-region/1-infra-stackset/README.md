@@ -1,6 +1,6 @@
-# Route 53 Application Recovery Controller Blog Post Code
+# Route 53 ARC Blog Post - Infra Stack Code
 
-This CloudFormation (CFN) Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller.  It is the first part of a three part CFN Deployment, that is intended to be followed by *2-arc-stack* and *3-lambda-stackset*.  
+This CloudFormation (CFN) Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller.  It is the first part of a three part CFN Deployment, that is intended to be followed by *[2-arc-stack](https://github.com/harshawsharma/sandpit/tree/master/arc-blog/single-region/2-arc-stack)* and *[3-lambda-stack](https://github.com/harshawsharma/sandpit/tree/master/arc-blog/single-region/3-lambda-stack)*.  
 
 This CFN should be deployed as a StackSet with us-east-1 as the first region and us-west-2 as the second region, within a single AWS account.  It uses the CloudFormation Nested Stack approach, with 3 child stacks to deploy the following components across each target region:  
 a. Network Stack - Base level infrastructure including public/private subnets, Internet gateway, NAT gateway, route tables, etc.  
@@ -15,4 +15,4 @@ c. Database Stack - Database level infrastructure including KMS Keys, Secrets, D
 * Sensible defaults for almost all configuration options are provided in the "Mappings" section of the `stack-master.yml` template to accelerate deployment of the collective infrastructure. These may be edited prior to deployment but doing so may result in unexpected behaviour.
 * These templates assume familiarity and experience with AWS products and features such as CloudFormation StackSets, and prior account preparation according to the [guidelines available on this documentation is required](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html).  If you have not used CloudFormation StackSets in your account prior to deploying these templates, please refer to this documentation before commencing.
 
-**Please note that this sample is provided for demonstration and learning purposes only, and should be reviewed for alignment with organisational policies and best practices before any production use.**
+**This sample is provided for demonstration and learning purposes only, and should be reviewed for alignment with organisational policies and best practices before any production use.**
