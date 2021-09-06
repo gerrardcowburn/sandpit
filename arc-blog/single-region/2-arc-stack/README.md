@@ -1,4 +1,4 @@
-# Route 53 ARC Blog Post - App Stack Code
+# Route 53 ARC Blog Post - ARC Stack Code
 
 This CloudFormation (CFN) Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller. It is the second of a three CFN Deployment. Deploy the *[1-infra-stackset]*(https://github.com/harshawsharma/sandpit/edit/master/arc-blog/single-region/1-infra-stackset/) before deploying this stack. 
 
