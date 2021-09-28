@@ -182,7 +182,7 @@ Resources:
       FunctionName: !Sub ${ProjectId}-Dashboard
       Role: !If [PrimaryRegion, !GetAtt DashboardLambdaRole.Arn, !Sub 'arn:aws:iam::${AWS::AccountId}:role/${ProjectId}-DashboardLambdaRole']
       Runtime: nodejs12.x
-      Handler: index.handler
+      Handler: dashboard-lambda.handler
       Environment:
         Variables: 
           DeploymentRegions: !Sub
