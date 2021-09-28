@@ -365,7 +365,7 @@ Resources:
       FunctionName: !Sub ${ProjectId}-DatabaseFailover
       Role: !If [PrimaryRegion, !GetAtt FailoverLambdaRole.Arn, !Sub 'arn:aws:iam::${AWS::AccountId}:role/${ProjectId}-FailoverLambdaRole']
       Runtime: nodejs12.x
-      Handler: dashboard-lambda.handler
+      Handler: failover-lambda.handler
       Layers:
         - !Ref FailoverLambdaLayerSDK
       Environment:
