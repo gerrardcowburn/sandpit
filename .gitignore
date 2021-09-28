@@ -119,3 +119,5 @@ dist
 terraform.tfstate*
 .terraform
 .DS_Store
+arc-blog/.idea/workspace.xml
+arc-blog/.idea/workspace.xml
