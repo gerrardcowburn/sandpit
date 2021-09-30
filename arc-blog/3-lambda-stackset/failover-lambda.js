@@ -1,25 +1,33 @@
 /*jshint esversion: 8 */
 const AWS = require('aws-sdk');
 
-const REGION = process.env.AWS_REGION ? process.env.AWS_REGION : "us-west-2";
+const REGION = process.env.AWS_REGION ? process.env.AWS_REGION : "us-east-1";
 
 // RETURN NOT OK IF GIVING ERROR
 
 const lambdaParams = {};
-let paramErrors = "";
-process.env.DeploymentRegions ? (lambdaParams.deploymentRegions = JSON.parse(process.env.DeploymentRegions)) : (paramErrors += "DeploymentRegions"); //"[ \"us-west-2\", \"eu-west-1\" ]";
-process.env.AuroraGlobalClusterId ? (lambdaParams.auroraGlobalClusterId = process.env.AuroraGlobalClusterId) : (paramErrors += ", AuroraGlobalClusterId"); //"arcblog-global-cluster";
-process.env.AuroraClusterArns ? (lambdaParams.auroraClusterArns = JSON.parse(process.env.AuroraClusterArns)) : (paramErrors += ", AuroraClusterArns"); //"{ \
-//    \"us-west-2\": \"arn:aws:rds:us-west-2:082910111533:cluster:arcblog-cluster-us-west-2\", \
-//    \"eu-west-1\": \"arn:aws:rds:eu-west-1:082910111533:cluster:arcblog-cluster-eu-west-1\" \
-//}";
-process.env.RoutingControlArns ? (lambdaParams.routingControlArns = JSON.parse(process.env.RoutingControlArns)) : (paramErrors += ", RoutingControlArns");
-process.env.ClusterEndpoints ? (lambdaParams.clusterEndpoints = JSON.parse(process.env.ClusterEndpoints)) : (paramErrors += ", ClusterEndpoints"); //"{ \
-//    \"us-west-2\": \"https://8a1a4592.route53-recovery-cluster.us-west-2.amazonaws.com/v1\", \
-//    \"eu-west-1\": \"https://33d70784.route53-recovery-cluster.eu-west-1.amazonaws.com/v1\", \
-//    \"us-east-1\": \"https://1c1c179d.route53-recovery-cluster.us-east-1.amazonaws.com/v1\" \
-//}";
-//console.log(lambdaParams);
+let paramErrors = [];
+lambdaParams.deploymentRegions = process.env.DeploymentRegions ? JSON.parse(process.env.DeploymentRegions) : null;
+lambdaParams.auroraGlobalClusterId = process.env.AuroraGlobalClusterId ? JSON.parse(process.env.AuroraGlobalClusterId) : null;
+lambdaParams.auroraClusterArns = process.env.AuroraClusterArns ? JSON.parse(process.env.AuroraClusterArns) : null;
+lambdaParams.routingControlArns = process.env.RoutingControlArns ? JSON.parse(process.env.RoutingControlArns) : null;
+lambdaParams.clusterEndpoints = process.env.ClusterEndpoints ? JSON.parse(process.env.ClusterEndpoints) : null;
+
+if (!lambdaParams.deploymentRegions) {
+    paramErrors.push("DeploymentRegions");
+}
+if (!lambdaParams.auroraGlobalClusterId) {
+    paramErrors.push("AuroraGlobalClusterId");
+}
+if (!lambdaParams.auroraClusterArns) {
+    paramErrors.push("AuroraClusterArns");
+}
+if (!lambdaParams.routingControlArns) {
+    paramErrors.push("RoutingControlArns");
+}
+if (!lambdaParams.clusterEndpoints) {
+    paramErrors.push("ClusterEndpoints");
+}
 
 const rdsclient = new AWS.RDS({ region: REGION }); 
 const r53rcd = {};
@@ -40,7 +48,7 @@ instantiateClients();
 
 exports.handler = async (event, context) => {
     if (paramErrors !== "") {
-        console.error(paramErrors+" parameters are missing, aborting");
+        console.error(`${paramErrors.join(", ")} parameters are missing, aborting`);
         return "PARAMETERS_MISSING";
     }
     try {
@@ -51,10 +59,10 @@ exports.handler = async (event, context) => {
         
         const globalClusterStatus = await queryGlobalClusterStatus();
         //console.log(`globalClusterStatus: ${JSON.stringify(globalClusterStatus)}`);
-        if (globalClusterStatus.state == "failing-over") {
+        if (globalClusterStatus.state === "failing-over") {
             console.log("Database cluster already failing over, taking no action");
             return "DATABASE_ALREADY_FAILING_OVER";
-        } else if (globalClusterStatus.state == "error") {
+        } else if (globalClusterStatus.state === "error") {
             console.log("Database cluster status error, taking no action");
             return "DATABASE_STATUS_ERROR";
         }
@@ -73,9 +81,7 @@ exports.handler = async (event, context) => {
             console.log("Target database cluster unclear, taking no action");
             return "TARGET_DATABASE_UNCLEAR";
         } else {
-//CONSIDER REFACTORING THIS TO REMOVE DEPENDENCY ON AURORA CLUSTER ARNS
-//THIS DOESN'T WORK PROPERLY IF THE GCS IS UNDEFINED
-            if (globalClusterStatus[lambdaParams.auroraClusterArns[targetRegion]] == false) {
+            if (!globalClusterStatus[lambdaParams.auroraClusterArns[targetRegion]]) {
                 console.log("Database is not active in target region, initiating failover");
                 const failoverRequestParams = {
                     GlobalClusterIdentifier: lambdaParams.auroraGlobalClusterId,
@@ -92,7 +98,6 @@ exports.handler = async (event, context) => {
                     return "ERROR_REQUESTING_FAILOVER";
                 }
 
-
             } else {
                 console.log("Database is active in target region, taking no action");
                 return "NO_ACTION_REQUIRED";
@@ -100,7 +105,7 @@ exports.handler = async (event, context) => {
         }
 
     } catch (error) {
-        console.error(error);
+        console.error('Handler error '+error);
     }
     
 };
@@ -126,9 +131,8 @@ const queryGlobalClusterStatus = async () => {
                 globalClusterStatus[member.DBClusterArn] = member.IsWriter;
             });
         }
-    } catch (err) {
-        console.error(`Error querying global clusters status`);
-        //console.error(err);
+    } catch (error) {
+        console.error('Error querying global clusters status '+error);
         globalClusterStatus.state = "error";
     }
 
@@ -149,8 +153,8 @@ const queryRoutingControlStates = async () => {
                 const getRoutingControlStateResponse = await r53rcd[epRegion].getRoutingControlState(getRoutingControlStateParams).promise();
                 //console.log(`getRoutingControlStateResponse: ${JSON.stringify(getRoutingControlStateResponse)}`);
                 routingControlStates[rcRegion] = getRoutingControlStateResponse.RoutingControlState;
-            } catch (err) {
-                console.error(`getRoutingControlStateResponse Error ${err}`);
+            } catch (error) {
+                console.error('getRoutingControlStateResponse Error '+error);
                 routingControlStates.state = "error";
             }
         }

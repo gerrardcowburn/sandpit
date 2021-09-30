@@ -1,0 +1,12 @@
+{
+  "name": "multi-dns-querier",
+  "version": "1.0.0",
+  "description": "Tool to perform multiple parallel DNS queries and output results",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

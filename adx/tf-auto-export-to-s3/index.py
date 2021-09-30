@@ -13,6 +13,11 @@ destination_bucket = os.environ['S3_BUCKET']
 if not destination_bucket:
     raise Exception("'S3_BUCKET' environment variable must be defined!")
 
+dataexchange = boto3.client(
+    service_name='dataexchange',
+    region_name=region
+)
+
 # Grouper recipe from standard docs: https://docs.python.org/3/library/itertools.html
 def grouper(iterable, n):
     iterator = iter(iterable)
@@ -22,14 +27,6 @@ def grouper(iterable, n):
         group = tuple(islice(iterator, n))
 
 def handler(event, context):
-    dataexchange = boto3.client(
-        service_name='dataexchange',
-        region_name=region
-    )
-    s3 = boto3.client(
-        service_name='s3',
-        region_name=region
-    )
     #If the request is from Terraform get the RevisionID, for first revision
     if 'InitialInit' in event:
         data_set_id = event['InitialInit']['data_set_id']
