@@ -118,3 +118,6 @@ dist
 # Terraform
 terraform.tfstate*
 .terraform
+
+# Mac
+.DS_Store
