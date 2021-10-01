@@ -57,6 +57,7 @@ exports.handler = async (event) => {
             console.log("constructDynamicResponse");
             response = await constructDynamicResponse(response, event);
             break;
+        case '/api':
         case '/api/':
             console.log("constructApiResponse");
             response = await constructEniBasedApiResponse(response, event);
@@ -105,9 +106,6 @@ const responseScript = `
         response.responseBody === "${lambdaParams.deploymentRegions[0]+'a'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
         response.responseBody === "${lambdaParams.deploymentRegions[0]+'b'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
         response.responseBody === "${lambdaParams.deploymentRegions[0]+'c'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "${lambdaParams.deploymentRegions[1]+'a'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "${lambdaParams.deploymentRegions[1]+'b'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "${lambdaParams.deploymentRegions[1]+'c'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
         response.responseBody === "Maintenance" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
     };
     const removeRow = () => {
@@ -155,7 +153,7 @@ const constructDynamicResponse = async (response) => {
         <h2>Response Summary for ${lambdaParams.dns}</h2>
         <table id="response-table" class="center">
             <thead>
-                <tr><th>Timestamp</th><th>${lambdaParams.deploymentRegions[0]+'a'}</th><th>${lambdaParams.deploymentRegions[0]+'b'}</th><th>${lambdaParams.deploymentRegions[0]+'c'}</th><th>${lambdaParams.deploymentRegions[1]+'a'}</th><th>${lambdaParams.deploymentRegions[1]+'b'}</th><th>${lambdaParams.deploymentRegions[1]+'c'}</th><th>Maintenance</th>
+                <tr><th>Timestamp</th><th>${lambdaParams.deploymentRegions[0]+'a'}</th><th>${lambdaParams.deploymentRegions[0]+'b'}</th><th>${lambdaParams.deploymentRegions[0]+'c'}</th><th>Maintenance</th>
             </thead><tbody>
             </tbody></table>
         ${responseScript}
@@ -176,7 +174,11 @@ const constructEniBasedApiResponse = async (response) => {
 
     const eniAZMapping = await buildEniAZMapping();
 
-    response.body = `{ "responseBody": "${eniAZMapping[dnsQueryResponse[0]] || "Maintenance" }"`;
+    const responseDate = new Date;
+    const responseTime = responseDate.toTimeString().split(" ")[0];
+    console.log(`responseTime: ${responseTime}`);
+
+    response.body = `{ "responseBody": "${eniAZMapping[dnsQueryResponse[0]] || "Maintenance" }, "Time": "${responseTime}" }`;
     response.statusCode = 200;
     response.statusDescription = "200 OK";
 

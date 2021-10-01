@@ -8,9 +8,6 @@ Parameters:
   VpcCidr: 
     Type: String
     Description: CIDR for VPC deployments
-  AllowedCidr:
-    Type: String
-    Description: CIDR allowed in security group for FrontEnd access
 
 Outputs:
   VpcID:
@@ -58,11 +55,6 @@ Outputs:
     Value: !Ref PrivateSubnet2C
     Export:
       Name: stack-network-PrivateSubnet2C
-  FrontEndSG:
-    Description: FrontEnd Security Group
-    Value: !Ref FrontEndSG
-    Export:
-      Name: stack-network-FrontEndSG
 
 Resources:
   VPC:
@@ -138,27 +130,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectId}-PrivateSubnet2C
-
-  FrontEndSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security Group for FrontEnd servers
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: !Ref AllowedCidr
-          Description: Permit access inbound from the Allowed CIDR to FrontEnd Security Group on Port 80
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 65535
-          CidrIp: 0.0.0.0/0
-          Description: Allow outbound access from FrontEnd Instances for patching, updates, logging, etc. WARNING this access should be restricted in a production environment.
-      VpcId: !Ref VPC
-      Tags:
-        - Key: Name
-          Value: !Sub '${ProjectId}-FrontEndSG'
 
   IGW:
     Type: "AWS::EC2::InternetGateway"

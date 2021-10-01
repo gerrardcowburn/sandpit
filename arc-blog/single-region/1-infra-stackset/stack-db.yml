@@ -150,7 +150,17 @@ Resources:
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
-          SourceSecurityGroupId: !ImportValue stack-app-FrontEndSG
+          SourceSecurityGroupId: !ImportValue stack-appA-FrontEndSG
+          Description: Allow inbound access from FrontEnd Security Group to database on Port 3306
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !ImportValue stack-appB-FrontEndSG
+          Description: Allow inbound access from FrontEnd Security Group to database on Port 3306
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !ImportValue stack-appC-FrontEndSG
           Description: Allow inbound access from FrontEnd Security Group to database on Port 3306
       SecurityGroupEgress:
         - IpProtocol: tcp
