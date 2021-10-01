@@ -92,9 +92,9 @@ Resources:
   FrontEndASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      AutoScalingGroupName: !Sub FrontEndASG{CellId}
+      AutoScalingGroupName: !Sub FrontEndASG${CellId}
       VPCZoneIdentifier:
-        - Fn::ImportValue: !Sub "stack-network-PrivateSubnet2{CellId}"
+        - Fn::ImportValue: !Sub "stack-network-PrivateSubnet2${CellId}"
       CapacityRebalance: true
       Cooldown: '30'
       HealthCheckGracePeriod: 120
@@ -109,16 +109,17 @@ Resources:
       Tags:
         - Key: Name
           PropagateAtLaunch: true
-          Value: !Sub '${ProjectId}-FrontEndInstance{CellId}'
+          Value: !Sub '${ProjectId}-FrontEndInstance${CellId}'
 
   FrontEndASGLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
-      LaunchTemplateName: !Sub FrontEndASGLaunchTemplate{CellId}
+      LaunchTemplateName: !Sub FrontEndASGLaunchTemplate${CellId}
       LaunchTemplateData: 
         ImageId: !Ref 'ImageId'
         InstanceType: !Ref 'InstanceType'
-        SecurityGroupIds: !Ref FrontEndSG
+        SecurityGroupIds: 
+          - !Ref FrontEndSG
         TagSpecifications: 
           - ResourceType: instance
             Tags:
