@@ -26,7 +26,7 @@ Mappings:
       DashboardLambdaCheckInterval: 5
   RegionalParameters:
     us-east-1:
-      LambdaCodeS3Bucket: meridian-s3
+      LambdaCodeS3Bucket: gerrardcowburnsandpit
       DashboardLambdaResolvers: "10.0.0.2"
 
 Parameters:
