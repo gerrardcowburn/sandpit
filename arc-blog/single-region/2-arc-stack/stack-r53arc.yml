@@ -15,7 +15,7 @@ Mappings:
   StaticParameters:
     StaticParameters:
       FrontEndURL: app.arcblog.aws
-      FrontEndBackupURL: yourmaintenancepage.yourdomain.com
+      FrontEndBackupURL: maintenance.arcblog.aws
       HostedZoneDomain: arcblog.aws
       Region1: us-east-1
 
@@ -268,15 +268,6 @@ Resources:
       ClusterArn: !Ref Cluster
       ControlPanelArn: !Ref ControlPanel
 
-#  RoutingControlCell1Aurora:
-#    Type: AWS::Route53RecoveryControl::RoutingControl
-#    Properties:
-#      Name: !Sub
-#        - ${ProjectId}-Cell1Aurora-${Region1}
-#        - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
-#      ClusterArn: !Ref Cluster
-#      ControlPanelArn: !Ref ControlPanel
-
   AssertionRuleCannotTurnOffAllZonalRoutingControls:
     Type: AWS::Route53RecoveryControl::SafetyRule
     Properties:
@@ -290,7 +281,7 @@ Resources:
           - !Ref RoutingControlCell1C
       RuleConfig:
         Type: ATLEAST
-        Threshold: 1
+        Threshold: 2
         Inverted: false
 
   RoutingControlHealthcheckCell1:
@@ -333,56 +324,20 @@ Resources:
         - Key:  Name
           Value: !Sub ${ProjectId}-RoutingControlHealthcheckCell1C
 
-  AggregateHealthcheck:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig: 
-        Type: CALCULATED
-        HealthThreshold: 1
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheck
 
-  AggregateHealthcheckCell1A:
+  AggregateHealthcheckCell1ABC:
     Type: AWS::Route53::HealthCheck
     Properties:
       HealthCheckConfig:
         Type: CALCULATED
-        HealthThreshold: 2
+        HealthThreshold: 1
         ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1
           - !Ref RoutingControlHealthcheckCell1A
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1A
-
-  AggregateHealthcheckCell1B:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig: 
-        Type: CALCULATED
-        HealthThreshold: 2
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1
           - !Ref RoutingControlHealthcheckCell1B
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1B
-          
-  AggregateHealthcheckCell1C:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig: 
-        Type: CALCULATED
-        HealthThreshold: 2
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1
           - !Ref RoutingControlHealthcheckCell1C
       HealthCheckTags:
         - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1C
+          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1ABC
 
   HostedZone:
     Type: AWS::Route53::HostedZone
@@ -398,28 +353,40 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       Failover: PRIMARY
-      ResourceRecords: 
-        - !Sub 
-          - "weighted-${FrontEndURL}"
-          - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
+      AliasTarget:
+        DNSName: !Ref RecordSetWeighted1A
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: Primary
-      Type: CNAME
-      TTL: 5
-      HealthCheckId: !Ref AggregateHealthcheck
+      Type: A
+      HealthCheckId: !Ref RoutingControlHealthcheckCell1
 
   RecordSetSecondary:
     Type: AWS::Route53::RecordSet
     Properties:
       Failover: SECONDARY
-      ResourceRecords:
-        - !FindInMap [StaticParameters, StaticParameters, FrontEndBackupURL]
+      AliasTarget:
+        DNSName: !Ref RecordSetBackup
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: Secondary
-      Type: CNAME
+      Type: A
+
+
+  RecordSetBackup:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      ResourceRecords: 
+        - 1.1.1.1
+      HostedZoneId: !Ref HostedZone
+      Name: !FindInMap [StaticParameters, StaticParameters, FrontEndBackupURL]
+      Type: A
       TTL: 5
+
 
   RecordSetWeighted1A:
     Type: AWS::Route53::RecordSet
@@ -431,13 +398,13 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r1w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: !Sub 
           - "${Region1}a"
           - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
       Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell1A
+      HealthCheckId: !Ref RoutingControlHealthcheckCell1A
 
   RecordSetWeighted1B:
     Type: AWS::Route53::RecordSet
@@ -449,13 +416,13 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r1w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: !Sub 
           - "${Region1}b"
           - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
       Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell1B
+      HealthCheckId: !Ref RoutingControlHealthcheckCell1B
 
   RecordSetWeighted1C:
     Type: AWS::Route53::RecordSet
@@ -467,10 +434,10 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r1w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: !Sub 
           - "${Region1}c"
           - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
       Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell1C
+      HealthCheckId: !Ref RoutingControlHealthcheckCell1C

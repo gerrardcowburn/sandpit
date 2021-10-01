@@ -15,11 +15,8 @@ Mappings:
   StaticParameters:
     StaticParameters:
       FrontEndURL: app.arcblog.aws
-      FrontEndURLz: app.arcblog.awsz
-      FrontEndBackupURL: yourmaintenancepage.yourdomain.com
-      FrontEndBackupURLz: maintenance.arcblog.awsz
+      FrontEndBackupURL: maintenance.arcblog.aws
       HostedZoneDomain: arcblog.aws
-      HostedZoneDomainz: arcblog.awsz
       Region1: us-east-1 
       Region2: us-west-2
 
@@ -277,6 +274,7 @@ Resources:
     Type: AWS::Route53RecoveryReadiness::ResourceSet
     Properties:
       ResourceSetName: !Sub ${ProjectId}-ResourceSet-ELB
+      ResourceSetType: AWS::ElasticLoadBalancingV2::LoadBalancer
       Resources:
         - ResourceArn: !Ref Region1ElbArnA
           ReadinessScopes:
@@ -296,12 +294,12 @@ Resources:
         - ResourceArn: !Ref Region2ElbArnC
           ReadinessScopes:
             - !GetAtt Cell2C.CellArn
-      ResourceSetType: AWS::ElasticLoadBalancingV2::LoadBalancer
 
   ResourceSetAsg:
     Type: AWS::Route53RecoveryReadiness::ResourceSet
     Properties:
       ResourceSetName: !Sub ${ProjectId}-ResourceSet-ASG
+      ResourceSetType: AWS::AutoScaling::AutoScalingGroup
       Resources:
         - ResourceArn: !Ref Region1AsgArnA
           ReadinessScopes:
@@ -321,7 +319,6 @@ Resources:
         - ResourceArn: !Ref Region2AsgArnC
           ReadinessScopes:
             - !GetAtt Cell2C.CellArn
-      ResourceSetType: AWS::AutoScaling::AutoScalingGroup
 
   ResourceSetAurora:
     Type: AWS::Route53RecoveryReadiness::ResourceSet
@@ -500,7 +497,7 @@ Resources:
           - !Ref RoutingControlCell1
       RuleConfig:
         Type: ATLEAST
-        Threshold: 1
+        Threshold: 2
         Inverted: false
 
   GatingRuleCell1RequiresDB:
@@ -550,7 +547,7 @@ Resources:
           - !Ref RoutingControlCell2
       RuleConfig:
         Type: ATLEAST
-        Threshold: 1
+        Threshold: 2
         Inverted: false
 
   GatingRuleCell2RequiresDB:
@@ -666,10 +663,10 @@ Resources:
         - Key: Name
           Value: !Sub ${ProjectId}-RoutingControlHealthcheckCell2C
 
-  AggregateHealthcheck:
+  AggregateHealthcheckCell12:
     Type: AWS::Route53::HealthCheck
     Properties:
-      HealthCheckConfig: 
+      HealthCheckConfig:
         Type: CALCULATED
         HealthThreshold: 1
         ChildHealthChecks:
@@ -677,85 +674,37 @@ Resources:
           - !Ref RoutingControlHealthcheckCell2
       HealthCheckTags:
         - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheck
+          Value: !Sub ${ProjectId}-AggregateHealthcheckCell12
 
-  AggregateHealthcheckCell1A:
+
+  AggregateHealthcheckCell1ABC:
     Type: AWS::Route53::HealthCheck
     Properties:
       HealthCheckConfig:
         Type: CALCULATED
-        HealthThreshold: 2
+        HealthThreshold: 1
         ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1
           - !Ref RoutingControlHealthcheckCell1A
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1A
-
-  AggregateHealthcheckCell1B:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig: 
-        Type: CALCULATED
-        HealthThreshold: 2
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1
           - !Ref RoutingControlHealthcheckCell1B
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1B
-          
-  AggregateHealthcheckCell1C:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig: 
-        Type: CALCULATED
-        HealthThreshold: 2
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1
           - !Ref RoutingControlHealthcheckCell1C
       HealthCheckTags:
         - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1C
-          
-  AggregateHealthcheckCell2A:
+          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1ABC
+
+  AggregateHealthcheckCell2ABC:
     Type: AWS::Route53::HealthCheck
     Properties:
-      HealthCheckConfig: 
+      HealthCheckConfig:
         Type: CALCULATED
-        HealthThreshold: 2
+        HealthThreshold: 1
         ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell2
           - !Ref RoutingControlHealthcheckCell2A
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell2A
-
-  AggregateHealthcheckCell2B:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig: 
-        Type: CALCULATED
-        HealthThreshold: 2
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell2
           - !Ref RoutingControlHealthcheckCell2B
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell2B
-
-  AggregateHealthcheckCell2C:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig: 
-        Type: CALCULATED
-        HealthThreshold: 2
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell2
           - !Ref RoutingControlHealthcheckCell2C
       HealthCheckTags:
         - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell2C
+          Value: !Sub ${ProjectId}-AggregateHealthcheckCell2ABC
+
 
   HostedZone:
     Type: AWS::Route53::HostedZone
@@ -771,32 +720,138 @@ Resources:
             - ${Region2}
             - Region2: !FindInMap [StaticParameters, StaticParameters, Region2]
 
+
   RecordSetPrimary:
     Type: AWS::Route53::RecordSet
     Properties:
       Failover: PRIMARY
-      ResourceRecords: 
-        - !Sub 
-          - "weighted-${FrontEndURL}"
-          - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
+      AliasTarget:
+        DNSName: !Ref RecordSetPrimaryRS
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: Primary
-      Type: CNAME
-      TTL: 5
-      HealthCheckId: !Ref AggregateHealthcheck
+      Type: A
+      HealthCheckId: !Ref AggregateHealthcheckCell12
 
   RecordSetSecondary:
     Type: AWS::Route53::RecordSet
     Properties:
       Failover: SECONDARY
-      ResourceRecords:
-        - !FindInMap [StaticParameters, StaticParameters, FrontEndBackupURL]
+      AliasTarget:
+        DNSName: !Ref RecordSetBackup
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: Secondary
-      Type: CNAME
+      Type: A
+
+  RecordSetPrimaryRS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Failover: PRIMARY
+      AliasTarget:
+        DNSName: !Ref RecordSetPrimaryR1
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub
+        - "rs-${FrontEndURL}"
+        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
+      SetIdentifier: Primary
+      Type: A
+      HealthCheckId: !Ref RoutingControlHealthcheckCell1
+
+  RecordSetSecondaryRS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Failover: SECONDARY
+      AliasTarget:
+        DNSName: !Ref RecordSetPrimaryR2
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub
+        - "rs-${FrontEndURL}"
+        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
+      SetIdentifier: Secondary
+      Type: A
+
+  RecordSetBackup:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      ResourceRecords: 
+        - 1.1.1.1
+      HostedZoneId: !Ref HostedZone
+      Name: !FindInMap [StaticParameters, StaticParameters, FrontEndBackupURL]
+      Type: A
       TTL: 5
+
+
+  RecordSetPrimaryR1:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Failover: PRIMARY
+      AliasTarget:
+        DNSName: !Ref RecordSetWeighted1A
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub
+        - "r1-${FrontEndURL}"
+        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
+      SetIdentifier: Primary
+      Type: A
+      HealthCheckId: !Ref AggregateHealthcheckCell1ABC
+
+  RecordSetSecondaryR1:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Failover: SECONDARY
+      AliasTarget:
+        DNSName: !Ref RecordSetBackup
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub
+        - "r1-${FrontEndURL}"
+        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
+      SetIdentifier: Secondary
+      Type: A
+
+
+  RecordSetPrimaryR2:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Failover: PRIMARY
+      AliasTarget:
+        DNSName: !Ref RecordSetWeighted2A
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub
+        - "r2-${FrontEndURL}"
+        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
+      SetIdentifier: Primary
+      Type: A
+      HealthCheckId: !Ref AggregateHealthcheckCell2ABC
+
+  RecordSetSecondaryR2:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Failover: SECONDARY
+      AliasTarget:
+        DNSName: !Ref RecordSetBackup
+        EvaluateTargetHealth: false
+        HostedZoneId: !Ref HostedZone
+      HostedZoneId: !Ref HostedZone
+      Name: !Sub
+        - "r2-${FrontEndURL}"
+        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
+      SetIdentifier: Secondary
+      Type: A
 
   RecordSetWeighted1A:
     Type: AWS::Route53::RecordSet
@@ -808,13 +863,13 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r1w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: !Sub 
           - "${Region1}a"
           - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
       Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell1A
+      HealthCheckId: !Ref RoutingControlHealthcheckCell1A
 
   RecordSetWeighted1B:
     Type: AWS::Route53::RecordSet
@@ -826,13 +881,13 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r1w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: !Sub 
           - "${Region1}b"
           - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
       Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell1B
+      HealthCheckId: !Ref RoutingControlHealthcheckCell1B
 
   RecordSetWeighted1C:
     Type: AWS::Route53::RecordSet
@@ -844,13 +899,13 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r1w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: !Sub 
           - "${Region1}c"
           - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
       Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell1C
+      HealthCheckId: !Ref RoutingControlHealthcheckCell1C
 
   RecordSetWeighted2A:
     Type: AWS::Route53::RecordSet
@@ -862,13 +917,13 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r2w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: !Sub 
           - "${Region2}a"
           - Region2: !FindInMap [StaticParameters, StaticParameters, Region2]
       Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell2A
+      HealthCheckId: !Ref RoutingControlHealthcheckCell2A
 
   RecordSetWeighted2B:
     Type: AWS::Route53::RecordSet
@@ -880,13 +935,13 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r2w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
       SetIdentifier: !Sub 
           - "${Region2}b"
           - Region2: !FindInMap [StaticParameters, StaticParameters, Region2]
       Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell2B
+      HealthCheckId: !Ref RoutingControlHealthcheckCell2B
 
   RecordSetWeighted2C:
     Type: AWS::Route53::RecordSet
@@ -898,319 +953,8 @@ Resources:
       Weight: 1
       HostedZoneId: !Ref HostedZone
       Name: !Sub 
-        - weighted-${FrontEndURL}
+        - r2w-${FrontEndURL}
         - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
-      SetIdentifier: !Sub 
-          - "${Region2}c"
-          - Region2: !FindInMap [StaticParameters, StaticParameters, Region2]
-      Type: A
-      HealthCheckId: !Ref AggregateHealthcheckCell2C
-
-
-
-
-
-
-
-
-
-
-  zAggregateHealthcheckCell12:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig:
-        Type: CALCULATED
-        HealthThreshold: 1
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1
-          - !Ref RoutingControlHealthcheckCell2
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell12
-
-  zAggregateHealthcheckCell1ABC:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig:
-        Type: CALCULATED
-        HealthThreshold: 1
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1A
-          - !Ref RoutingControlHealthcheckCell1B
-          - !Ref RoutingControlHealthcheckCell1C
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1ABC
-
-  zAggregateHealthcheckCell2ABC:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig:
-        Type: CALCULATED
-        HealthThreshold: 1
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell2A
-          - !Ref RoutingControlHealthcheckCell2B
-          - !Ref RoutingControlHealthcheckCell2C
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell2ABC
-
-
-  zHostedZone:
-    Type: AWS::Route53::HostedZone
-    Properties:
-      Name: !FindInMap [StaticParameters, StaticParameters, HostedZoneDomainz]
-      VPCs:
-        - VPCId: !Sub ${Region1VpcId}
-          VPCRegion: !Sub 
-            - ${Region1}
-            - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
-        - VPCId: !Sub ${Region2VpcId}
-          VPCRegion: !Sub
-            - ${Region2}
-            - Region2: !FindInMap [StaticParameters, StaticParameters, Region2]
-
-
-  zRecordSetPrimary:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Failover: PRIMARY
-      AliasTarget:
-        DNSName: !Ref zRecordSetPrimaryRS
-        EvaluateTargetHealth: false
-        HostedZoneId: !Ref zHostedZone
-      HostedZoneId: !Ref zHostedZone
-      Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: Primary
-      Type: A
-      HealthCheckId: !Ref zAggregateHealthcheckCell12
-
-  zRecordSetSecondary:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Failover: SECONDARY
-      AliasTarget:
-        DNSName: !Ref zRecordSetBackup
-        EvaluateTargetHealth: false
-        HostedZoneId: !Ref zHostedZone
-      HostedZoneId: !Ref zHostedZone
-      Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: Secondary
-      Type: A
-
-  zRecordSetPrimaryRS:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Failover: PRIMARY
-      AliasTarget:
-        DNSName: !Ref zRecordSetPrimaryR1
-        EvaluateTargetHealth: false
-        HostedZoneId: !Ref zHostedZone
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub
-        - "rs-${FrontEndURL}"
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: Primary
-      Type: A
-      HealthCheckId: !Ref RoutingControlHealthcheckCell1
-
-  zRecordSetSecondaryRS:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Failover: SECONDARY
-      AliasTarget:
-        DNSName: !Ref zRecordSetPrimaryR2
-        EvaluateTargetHealth: false
-        HostedZoneId: !Ref zHostedZone
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub
-        - "rs-${FrontEndURL}"
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: Secondary
-      Type: A
-
-  zRecordSetBackup:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      ResourceRecords: 
-        - 1.1.1.1
-      HostedZoneId: !Ref zHostedZone
-      Name: !FindInMap [StaticParameters, StaticParameters, FrontEndBackupURLz]
-      Type: A
-      TTL: 5
-
-
-  zRecordSetPrimaryR1:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Failover: PRIMARY
-      AliasTarget:
-        DNSName: !Ref zRecordSetWeighted1A
-        EvaluateTargetHealth: false
-        HostedZoneId: !Ref zHostedZone
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub
-        - "r1-${FrontEndURL}"
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: Primary
-      Type: A
-      HealthCheckId: !Ref zAggregateHealthcheckCell1ABC
-
-  zRecordSetSecondaryR1:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Failover: SECONDARY
-      AliasTarget:
-        DNSName: !Ref zRecordSetBackup
-        EvaluateTargetHealth: false
-        HostedZoneId: !Ref zHostedZone
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub
-        - "r1-${FrontEndURL}"
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: Secondary
-      Type: A
-
-
-  zRecordSetPrimaryR2:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Failover: PRIMARY
-      AliasTarget:
-        DNSName: !Ref zRecordSetWeighted2A
-        EvaluateTargetHealth: false
-        HostedZoneId: !Ref zHostedZone
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub
-        - "r2-${FrontEndURL}"
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: Primary
-      Type: A
-      HealthCheckId: !Ref zAggregateHealthcheckCell2ABC
-
-  zRecordSetSecondaryR2:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      Failover: SECONDARY
-      AliasTarget:
-        DNSName: !Ref zRecordSetBackup
-        EvaluateTargetHealth: false
-        HostedZoneId: !Ref zHostedZone
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub
-        - "r2-${FrontEndURL}"
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: Secondary
-      Type: A
-
-
-
-
-
-
-  zRecordSetWeighted1A:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      AliasTarget:
-        DNSName: !Ref Region1ElbDnsNameA
-        EvaluateTargetHealth: true
-        HostedZoneId: !Ref Region1ElbCanonicalHostedZoneId
-      Weight: 1
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub 
-        - r1w-${FrontEndURL}
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: !Sub 
-          - "${Region1}a"
-          - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
-      Type: A
-      HealthCheckId: !Ref RoutingControlHealthcheckCell1A
-
-  zRecordSetWeighted1B:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      AliasTarget:
-        DNSName: !Ref Region1ElbDnsNameB
-        EvaluateTargetHealth: true
-        HostedZoneId: !Ref Region1ElbCanonicalHostedZoneId
-      Weight: 1
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub 
-        - r1w-${FrontEndURL}
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: !Sub 
-          - "${Region1}b"
-          - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
-      Type: A
-      HealthCheckId: !Ref RoutingControlHealthcheckCell1B
-
-  zRecordSetWeighted1C:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      AliasTarget:
-        DNSName: !Ref Region1ElbDnsNameC
-        EvaluateTargetHealth: true
-        HostedZoneId: !Ref Region1ElbCanonicalHostedZoneId
-      Weight: 1
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub 
-        - r1w-${FrontEndURL}
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: !Sub 
-          - "${Region1}c"
-          - Region1: !FindInMap [StaticParameters, StaticParameters, Region1]
-      Type: A
-      HealthCheckId: !Ref RoutingControlHealthcheckCell1C
-
-  zRecordSetWeighted2A:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      AliasTarget:
-        DNSName: !Ref Region2ElbDnsNameA
-        EvaluateTargetHealth: true
-        HostedZoneId: !Ref Region2ElbCanonicalHostedZoneId
-      Weight: 1
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub 
-        - r2w-${FrontEndURL}
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: !Sub 
-          - "${Region2}a"
-          - Region2: !FindInMap [StaticParameters, StaticParameters, Region2]
-      Type: A
-      HealthCheckId: !Ref RoutingControlHealthcheckCell2A
-
-  zRecordSetWeighted2B:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      AliasTarget:
-        DNSName: !Ref Region2ElbDnsNameB
-        EvaluateTargetHealth: true
-        HostedZoneId: !Ref Region2ElbCanonicalHostedZoneId
-      Weight: 1
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub 
-        - r2w-${FrontEndURL}
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
-      SetIdentifier: !Sub 
-          - "${Region2}b"
-          - Region2: !FindInMap [StaticParameters, StaticParameters, Region2]
-      Type: A
-      HealthCheckId: !Ref RoutingControlHealthcheckCell2B
-
-  zRecordSetWeighted2C:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      AliasTarget:
-        DNSName: !Ref Region2ElbDnsNameC
-        EvaluateTargetHealth: true
-        HostedZoneId: !Ref Region2ElbCanonicalHostedZoneId
-      Weight: 1
-      HostedZoneId: !Ref zHostedZone
-      Name: !Sub 
-        - r2w-${FrontEndURL}
-        - FrontEndURL: !FindInMap [StaticParameters, StaticParameters, FrontEndURLz]
       SetIdentifier: !Sub 
           - "${Region2}c"
           - Region2: !FindInMap [StaticParameters, StaticParameters, Region2]
