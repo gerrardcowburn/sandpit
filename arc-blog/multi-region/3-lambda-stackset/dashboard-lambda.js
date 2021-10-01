@@ -45,7 +45,7 @@ exports.handler = async (event) => {
         }
     };
 
-    if (paramErrors !== "") {
+    if (paramErrors.length > 0) {
         console.error(`${paramErrors.join(", ")} parameters are missing, aborting`);
         response = constructBlankResponse(response);
         console.log(`response: ${JSON.stringify(response)}`);
@@ -57,7 +57,8 @@ exports.handler = async (event) => {
             console.log("constructDynamicResponse");
             response = await constructDynamicResponse(response, event);
             break;
-        case '/api/':
+            case '/api':
+            case '/api/':
             console.log("constructApiResponse");
             response = await constructEniBasedApiResponse(response, event);
             break;
@@ -70,72 +71,72 @@ exports.handler = async (event) => {
     return response;
 };
 
-const htmlStyle = `
-<style>
-    body {
-        font-family: Arial, sans-serif;
-    }
-    h1,h2 {
-        text-align: center;
-    }
-    td {
-        text-align: center;
-    }
-    .center {
-        margin-left: auto;
-        margin-right: auto;
-        width: 100%;
-    }
-    div.fixed {
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        width: 275px;
-        border: 3px solid #FF9900;
-    }
-</style>`;
-
-const responseScript = `
-<script>
-    const table = document.querySelector('#response-table');
-    const tbody = table.querySelector('tbody');
-    const insertRow = (response) => {
-        const row = tbody.insertRow(0);
-        row.innerHTML = <td class="p-2">${response.date}</td>;
-        response.responseBody === "${lambdaParams.deploymentRegions[0]+'a'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "${lambdaParams.deploymentRegions[0]+'b'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "${lambdaParams.deploymentRegions[0]+'c'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "${lambdaParams.deploymentRegions[1]+'a'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "${lambdaParams.deploymentRegions[1]+'b'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "${lambdaParams.deploymentRegions[1]+'c'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-        response.responseBody === "Maintenance" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
-    };
-    const removeRow = () => {
-        if (table.rows.length > ${lambdaParams.maxRows}) {
-            table.deleteRow(${lambdaParams.maxRows});
+const htmlStyle = `<style>
+        body {
+            font-family: Arial, sans-serif;
         }
-    };
-    const getUpdate = () => {
-        fetch('/api/')
-        .then(response => response.json())
-        .then(json => {
-            const responseBody = json?.responseBody;
-            const statusCode = json?.statusCode;
-            const date = new Date;
-            const time = date.toTimeString().split(\" \")[0];
-            insertRow({
-                date: time,
-                responseBody: responseBody,
-                statusCode: statusCode
-            });
-            removeRow();
-        })
-    };
-    getUpdate();
-    setInterval(() => {
-        getUpdate();
-    }, ${lambdaParams.checkInterval * 1000});
-</script>`;
+        h1,h2 {
+            text-align: center;
+        }
+        td {
+            text-align: center;
+        }
+        .center {
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+        div.fixed {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 275px;
+            border: 3px solid #FF9900;
+        }
+    </style>`;
+
+const responseScript = `<script>
+            const table = document.querySelector('#response-table');
+            const tbody = table.querySelector('tbody');
+            const insertRow = (response) => {
+                const row = tbody.insertRow(0);
+                row.innerHTML = \`<td class="p-2">\${response.responseTime}</td>\`;
+                response.responseBody === "${lambdaParams.deploymentRegions[0]+'a'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
+                response.responseBody === "${lambdaParams.deploymentRegions[0]+'b'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
+                response.responseBody === "${lambdaParams.deploymentRegions[0]+'c'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
+                response.responseBody === "${lambdaParams.deploymentRegions[1]+'a'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
+                response.responseBody === "${lambdaParams.deploymentRegions[1]+'b'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
+                response.responseBody === "${lambdaParams.deploymentRegions[1]+'c'}" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
+                response.responseBody === "Maintenance" ? row.innerHTML += \`<td class="p-2">\${response.responseBody}</td>\` : row.innerHTML += "<td></td>";
+            };
+            const removeRow = () => {
+                if (table.rows.length > ${lambdaParams.maxRows}) {
+                    table.deleteRow(${lambdaParams.maxRows});
+                }
+            };
+            const getUpdate = () => {
+                fetch('/api/')
+                .then(response => response.json())
+                .then(json => {
+                    const responseTime = json?.responseTime;
+                    const responseBody = json?.responseBody;
+                    const statusCode = json?.statusCode;
+                    const date = new Date;
+                    const time = date.toTimeString().split(\" \")[0];
+                    insertRow({
+                        date: time,
+                        responseBody: responseBody,
+                        responseTime: responseTime,
+                        statusCode: statusCode
+                    });
+                    removeRow();
+                })
+            };
+            getUpdate();
+            setInterval(() => {
+                getUpdate();
+            }, ${lambdaParams.checkInterval * 1000});
+        </script>`;
 
 const constructBlankResponse = (response) => {
     response.body = "";
@@ -155,9 +156,20 @@ const constructDynamicResponse = async (response) => {
         <h2>Response Summary for ${lambdaParams.dns}</h2>
         <table id="response-table" class="center">
             <thead>
-                <tr><th>Timestamp</th><th>${lambdaParams.deploymentRegions[0]+'a'}</th><th>${lambdaParams.deploymentRegions[0]+'b'}</th><th>${lambdaParams.deploymentRegions[0]+'c'}</th><th>${lambdaParams.deploymentRegions[1]+'a'}</th><th>${lambdaParams.deploymentRegions[1]+'b'}</th><th>${lambdaParams.deploymentRegions[1]+'c'}</th><th>Maintenance</th>
-            </thead><tbody>
-            </tbody></table>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>${lambdaParams.deploymentRegions[0]+'a'}</th>
+                    <th>${lambdaParams.deploymentRegions[0]+'b'}</th>
+                    <th>${lambdaParams.deploymentRegions[0]+'c'}</th>
+                    <th>${lambdaParams.deploymentRegions[1]+'a'}</th>
+                    <th>${lambdaParams.deploymentRegions[1]+'b'}</th>
+                    <th>${lambdaParams.deploymentRegions[1]+'c'}</th>
+                    <th>Maintenance</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
         ${responseScript}
     </body>
 </html>`;
@@ -180,7 +192,7 @@ const constructEniBasedApiResponse = async (response) => {
     const responseTime = responseDate.toTimeString().split(" ")[0];
     console.log(`responseTime: ${responseTime}`);
 
-    response.body = `{ "responseBody": "${eniAZMapping[dnsQueryResponse[0]] || "Maintenance" }, "Time": "${responseTime}" }`;
+    response.body = `{ "responseBody": "${eniAZMapping[dnsQueryResponse[0]] || "Maintenance" }", "responseTime": "${responseTime}" }`;
     response.statusCode = 200;
     response.statusDescription = "200 OK";
 
