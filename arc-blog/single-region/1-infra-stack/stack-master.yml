@@ -48,6 +48,7 @@ Resources:
         VpcCidr: !FindInMap 
           - RegionalParameters 
           - !Ref AWS::Region
+          - VpcCidr
 
   AppStackA:
     Type: "AWS::CloudFormation::Stack"
