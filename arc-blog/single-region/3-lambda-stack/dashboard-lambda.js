@@ -112,7 +112,8 @@ const responseScript = `<script>
                 }
             };
             const getUpdate = () => {
-                fetch('/api/')
+                const rand = Math.random();
+                fetch(\`/api/?\${rand}\`)
                 .then(response => response.json())
                 .then(json => {
                     const responseTime = json?.responseTime;
