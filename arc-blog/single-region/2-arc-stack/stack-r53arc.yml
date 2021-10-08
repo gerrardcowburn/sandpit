@@ -324,21 +324,6 @@ Resources:
         - Key:  Name
           Value: !Sub ${ProjectId}-RoutingControlHealthcheckCell1C
 
-
-  AggregateHealthcheckCell1ABC:
-    Type: AWS::Route53::HealthCheck
-    Properties:
-      HealthCheckConfig:
-        Type: CALCULATED
-        HealthThreshold: 1
-        ChildHealthChecks:
-          - !Ref RoutingControlHealthcheckCell1A
-          - !Ref RoutingControlHealthcheckCell1B
-          - !Ref RoutingControlHealthcheckCell1C
-      HealthCheckTags:
-        - Key: Name
-          Value: !Sub ${ProjectId}-AggregateHealthcheckCell1ABC
-
   HostedZone:
     Type: AWS::Route53::HostedZone
     Properties:
