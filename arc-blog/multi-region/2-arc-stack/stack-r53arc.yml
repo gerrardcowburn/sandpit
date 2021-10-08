@@ -727,7 +727,7 @@ Resources:
       Failover: PRIMARY
       AliasTarget:
         DNSName: !Ref RecordSetPrimaryRS
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
@@ -741,7 +741,7 @@ Resources:
       Failover: SECONDARY
       AliasTarget:
         DNSName: !Ref RecordSetBackup
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
@@ -754,7 +754,7 @@ Resources:
       Failover: PRIMARY
       AliasTarget:
         DNSName: !Ref RecordSetPrimaryR1
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !Sub
@@ -770,7 +770,7 @@ Resources:
       Failover: SECONDARY
       AliasTarget:
         DNSName: !Ref RecordSetPrimaryR2
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !Sub
@@ -796,7 +796,7 @@ Resources:
       Failover: PRIMARY
       AliasTarget:
         DNSName: !Ref RecordSetWeighted1A
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !Sub
@@ -812,7 +812,7 @@ Resources:
       Failover: SECONDARY
       AliasTarget:
         DNSName: !Ref RecordSetBackup
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !Sub
@@ -828,7 +828,7 @@ Resources:
       Failover: PRIMARY
       AliasTarget:
         DNSName: !Ref RecordSetWeighted2A
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !Sub
@@ -844,7 +844,7 @@ Resources:
       Failover: SECONDARY
       AliasTarget:
         DNSName: !Ref RecordSetBackup
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !Sub

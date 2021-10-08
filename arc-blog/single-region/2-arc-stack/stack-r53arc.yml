@@ -355,7 +355,7 @@ Resources:
       Failover: PRIMARY
       AliasTarget:
         DNSName: !Ref RecordSetWeighted1A
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
@@ -369,7 +369,7 @@ Resources:
       Failover: SECONDARY
       AliasTarget:
         DNSName: !Ref RecordSetBackup
-        EvaluateTargetHealth: false
+        EvaluateTargetHealth: true
         HostedZoneId: !Ref HostedZone
       HostedZoneId: !Ref HostedZone
       Name: !FindInMap [StaticParameters, StaticParameters, FrontEndURL]
