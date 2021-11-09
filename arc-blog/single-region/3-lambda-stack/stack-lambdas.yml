@@ -18,16 +18,17 @@ Conditions:
 Mappings:
   StaticParameters:
     StaticParameters:
-      FrontEndURL: app.arcblog.aws
-      Region1: us-east-1
-      LambdaLayerS3Key: js-sdk-2_958.zip
-      DashboardLambdaS3Key: dashboard-lambda.zip
-      DashboardLambdaMaxRows: 30
-      DashboardLambdaCheckInterval: 5
+      FrontEndURL: app.arcblog.aws # This URL will be monitored for active Availability Zone or Maintenace state.
+      Region1: us-east-1 # This must match the primary application deployment region.
+      LambdaLayerS3Key: js-sdk-2_958.zip # This must be the filename of a zip containing a suitable AWS SDK v2.958 or higher Lambda Layer deployment package.
+      DashboardLambdaS3Key: dashboard-lambda.zip # This must be the filename of a zip containing the Dashboard lambda code.
+      DashboardLambdaMaxRows: 30 # This controls how many previous state entries are presented on the dashboard.
+      DashboardLambdaCheckInterval: 5 # This controls how frequently in seconds the dashboard is updated.
+      LambdaAccessCidrIp: 0.0.0.0/0 # This controls what source IPs are allowed to access the dashboard. IT IS RECOMMENDED TO UPDATE THIS TO A MORE GRANULAR CONFIGURATION.
   RegionalParameters:
     us-east-1:
-      LambdaCodeS3Bucket: gerrardcowburnsandpit
-      DashboardLambdaResolvers: "10.0.0.2"
+      LambdaCodeS3Bucket: gerrardcowburnsandpit # This path must be set to an S3 bucket in Region 1 which hosts the CloudFormation deployment artefacts.  It must be in the form bucketname.
+      DashboardLambdaResolvers: "10.0.0.2" # This must be the address of the "VPC .2 Resolver" for the Lambda (and app) VPC.
 
 Parameters:
   ProjectId:
@@ -108,7 +109,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          CidrIp: 0.0.0.0/0
+          CidrIp: !FindInMap [StaticParameters, StaticParameters, LambdaAccessCidrIp]
           Description: Allow inbound access to Lambda for HTTP requests. WARNING this access should be restricted in a production environment.
       SecurityGroupEgress:
         - !Ref AWS::NoValue

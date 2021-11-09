@@ -15,7 +15,7 @@ Description: |
 Mappings:
   StaticParameters:
     StaticParameters:
-      TemplatePath: gerrardcowburnsandpit.s3.us-east-1 # Change this according to the location of the nested stack templates in S3
+      TemplatePath: gerrardcowburnsandpit.s3.us-east-1 # This path must be set to an S3 bucket in Region 1 which hosts the CloudFormation deployment artefacts.  It must be in the form bucketname.s3.region-code.
       LatestAmiId: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2' # Set this to the desired Amazon Machine Image descriptor to launch the EC2 instances with
       DBName: blog_database # Set this to the desired database name for initialisation on the Aurora cluster
       InstanceType: t3.small # Set this to the desired instance type for EC2 instances
@@ -38,9 +38,10 @@ Mappings:
 Parameters:
   ProjectId:
     Type: String
-    Description: Please enter a Project ID or Name which will be used for naming objects created by this template.
+    Description: Please enter a Project ID or Name which will be used for naming objects created by this template.  Must begin with a letter, contain only alphanumeric characters, and be shorter than 15 characters.
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
+    MaxLength: 15
+    ConstraintDescription: Must begin with a letter, contain only alphanumeric characters, and be shorter than 15 characters.
     Default: arcblog
 
 Resources:

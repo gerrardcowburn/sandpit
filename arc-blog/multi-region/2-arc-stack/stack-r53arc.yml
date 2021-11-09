@@ -12,15 +12,14 @@ Description:  |
 #  These parameters can be modified by advanced users at their own risk.
 #  Note that the resources deployed using this template will cost approx. $2.50/hr.  Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required.
 
-
 Mappings:
   StaticParameters:
     StaticParameters:
-      FrontEndURL: app.arcblog.aws
-      FrontEndBackupURL: maintenance.arcblog.aws
-      HostedZoneDomain: arcblog.aws
-      Region1: us-east-1 
-      Region2: us-west-2
+      FrontEndURL: app.arcblog.aws # This URL will be created in Route 53 as the sample application address.  It must be within the HostedZoneDomain.
+      FrontEndBackupURL: maintenance.arcblog.aws # This URL will be created in Route 53 as the sample maintenace address.  It must be within the HostedZoneDomain.
+      HostedZoneDomain: arcblog.aws # This Hosted Zone will be created in Route 53.  The domains above must be within it.
+      Region1: us-east-1 # This must match the primary application deployment region.
+      Region2: us-west-2 # This must match the secondary application deployment region.
 
 Parameters:
   ProjectId:

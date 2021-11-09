@@ -1,6 +1,6 @@
-# Route 53 ARC Blog Post - Infra Stack Code
+# Route 53 Application Recovery Controller Blog Post - Infrastructure Stack Code
 
-This CloudFormation (CFN) Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller.  It is the first part of a three part CFN Deployment, that is intended to be followed by *[2-arc-stack](https://github.com/harshawsharma/sandpit/tree/master/arc-blog/single-region/2-arc-stack)* and *[3-lambda-stack](https://github.com/harshawsharma/sandpit/tree/master/arc-blog/single-region/3-lambda-stack)*.  
+This CloudFormation (CFN) Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller.  It is the first part of a three part CFN Deployment, that is intended to be followed by *[2-arc-stack](https://github.com/aws-samples/route-53-application-recovery-controller/single-region/2-arc-stack)* and *[3-lambda-stack](https://github.com/aws-samples/route-53-application-recovery-controller/single-region/3-lambda-stack)*.  
 
 This CFN should be deployed as a standard Stack in us-east-1, within a single AWS account.  It uses the CloudFormation Nested Stack approach, with 3 child stacks to deploy the following components across each target region:  
 a. Network Stack - Base level infrastructure including public/private subnets, Internet gateway, NAT gateway, route tables, etc.  
@@ -13,8 +13,46 @@ Please be mindful that the resources deployed for the purposes of this sample wi
 * The three nested stack templates, `stack-network.yml`, `stack-app.yml`, and `stack-network.yml` must be uploaded to an S3 Bucket which is either public, or accessible via the IAM credentials used for the StackSet deployment.
 * The name of this S3 Bucket must be updated in the `TemplatePath` mapping in the `stack-master.yml` file prior to initiation of deployment.  The name should be in the format _bucketname_.s3._region_
 
-**Note:**
+**Notes:**
 * Sensible defaults for almost all configuration options are provided in the "Mappings" section of the `stack-master.yml` template to accelerate deployment of the collective infrastructure. These may be edited prior to deployment but doing so may result in unexpected behaviour.
 * These templates assume familiarity and experience with AWS products and features such as CloudFormation StackSets, and prior account preparation according to the [guidelines available on this documentation is required](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html).  If you have not used CloudFormation StackSets in your account prior to deploying these templates, please refer to this documentation before commencing.
 
 **This sample is provided for demonstration and learning purposes only, and should be reviewed for alignment with organisational policies and best practices before any production use.**
+
+
+
+
+
+
+
+
+
+# Route 53 ARC Blog Post - Lambda Stack Code
+
+This CloudFormation (CFN) Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller. It is the third and the final CFN. Deploy the *[1-infra-stackset](https://github.com/aws-samples/route-53-application-recovery-controller/single-region/1-infra-stackset/)* and the *[2-arc-stack](hhttps://github.com/aws-samples/route-53-application-recovery-controller/single-region/2-arc-stack)* before deploying this stack.
+
+This CFN will deploy a Lambda function that serves a basic web page via an Internet facing ALB. This CFN will also deploy all required supporting components such as Lambda Layers, Application Load Balancers, Security Groups, Roles, Policies, LambdaPermissions, and CloudWatch Scheduled Rules.
+
+### Build Activities
+```
+$ chmod 700 build.sh
+$ ./build.sh
+```
+
+### Deployment Activities
+* Perform the `Build Activities` outlined above. This simply zips the Lambda script included in this folder into a zip file for use during Lambda deployment.
+* Upload the Lambda deployment zip file created above, and the js-sdk-2.958.zip in this repository, to S3 buckets in the deployment region (us-east-1). This buckets must either be public, or accessible via the IAM credentials used for the Stack deployment.
+* Update the `LambdaCodeS3Bucket` mapping in the us-east-1 region of the RegionalParameters Mappings section of the template, based on the S3 bucket used in the step above.
+* Deploy the `stack-lambdas.yml` as a Stack with in us-east-1. Provide all required input parameters based on the resources deployed by the Application and Route 53 Application Recovery Controller stacks.
+
+***
+
+**Notes:**
+
+* Sensible defaults for almost all configuration options are provided in the "Mappings" section of the `stack-lambdas.yml` template to accelerate deployment of the collective infrastructure. These may be edited prior to deployment but doing so may result in unexpected behaviour. \ 
+
+* These templates assume familiarity and experience with AWS products and features such as CloudFormation StackSets, and prior account preparation according to the [guidelines available on this documentation is required](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html). If you have not used CloudFormation StackSets in your account prior to deploying these templates, please refer to this documentation before commencing. \
+
+**This sample is provided for demonstration and learning purposes only, and should be reviewed for alignment with organisational policies and best practices before any production use.** \
+
+**Specifically, the Dashboard Lambda deployed in this stack has a Security Group configured which allows traffic to reach it from 0.0.0.0/0, i.e. the Internet. It is recommended to update the LambdaAccessCidrIp StaticParameter in the Mappings section of the `stack-lambdas.yml` to a more granular configuration if possible**
