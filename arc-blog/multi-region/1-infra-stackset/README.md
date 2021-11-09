@@ -7,7 +7,9 @@ a. Network Stack - Base level infrastructure including public/private subnets, I
 b. Application Stack - Application level infrastructure including Network Load Balancers, AutoScaling Groups, etc. 
 c. Database Stack - Database level infrastructure including KMS Keys, Secrets, Database clusters and nodes, etc. 
 
-Please be mindful that the resources deployed for the purposes of this sample will cost approx. $1/hr. Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required. Stacks must be deleted from the StackSet in the reverse order they were provisioned, i.e. us-west-2 first and us-east-1 second.
+Please be mindful that the resources deployed for the purposes of this sample will cost approx. $1/hr. Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required. 
+
+Stacks must be deleted from the StackSet in the reverse order they were provisioned, i.e. us-west-2 first and us-east-1 second. Also ensure the database is active in us-east-1 before deleting.
 
 **Technical Prerequisites:**
 * The three nested stack templates, `stack-network.yml`, `stack-app.yml`, and `stack-network.yml` must be uploaded to an S3 Bucket which is either public, or accessible via the IAM credentials used for the StackSet deployment.
