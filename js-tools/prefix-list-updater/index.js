@@ -32,7 +32,7 @@ const argv = yargs
     .argv;
 
 const PREFIX_LIST_NAME = argv.p ? argv.p : argv.prefixlist ? argv.prefixlist : "gc-access"; //Name of target prefix list
-const REGIONS = ['us-east-2', 'us-east-1', 'us-west-2']; //List of Regions to search through when making updates
+const REGIONS = ['us-east-2', 'us-east-1', 'us-west-2', 'eu-west-1']; //List of Regions to search through when making updates
 const CONFIRMDONE = true; //Tells the script whether to wait 2 seconds after attempting an update to validate success, or whether to just crack on and assume everything's fine
 
 const main = async function (argv) {

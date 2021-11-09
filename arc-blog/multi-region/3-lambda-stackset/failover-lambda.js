@@ -3,16 +3,16 @@ const AWS = require('aws-sdk');
 
 const REGION = process.env.AWS_REGION ? process.env.AWS_REGION : "us-east-1";
 
-// RETURN NOT OK IF GIVING ERROR
-
+// Set up required parameters for Lambda operation based on environment variables
 const lambdaParams = {};
-let paramErrors = [];
 lambdaParams.deploymentRegions = process.env.DeploymentRegions ? JSON.parse(process.env.DeploymentRegions) : null;
-lambdaParams.auroraGlobalClusterId = process.env.AuroraGlobalClusterId ? JSON.parse(process.env.AuroraGlobalClusterId) : null;
+lambdaParams.auroraGlobalClusterId = process.env.AuroraGlobalClusterId ? process.env.AuroraGlobalClusterId : null;
 lambdaParams.auroraClusterArns = process.env.AuroraClusterArns ? JSON.parse(process.env.AuroraClusterArns) : null;
 lambdaParams.routingControlArns = process.env.RoutingControlArns ? JSON.parse(process.env.RoutingControlArns) : null;
 lambdaParams.clusterEndpoints = process.env.ClusterEndpoints ? JSON.parse(process.env.ClusterEndpoints) : null;
 
+// Catch errors in missing parameters for logging and exit
+let paramErrors = [];
 if (!lambdaParams.deploymentRegions) {
     paramErrors.push("DeploymentRegions");
 }
@@ -29,14 +29,12 @@ if (!lambdaParams.clusterEndpoints) {
     paramErrors.push("ClusterEndpoints");
 }
 
+// Instantiate required AWS SDK Clients:
+// RDS Client in the region local to this Lambda
 const rdsclient = new AWS.RDS({ region: REGION }); 
+// Route 53 Application Recovery Controller Data Plane client for all 5 dataplane endpoint regions
 const r53rcd = {};
-const eniclient = {};
 const instantiateClients = () => {
-    lambdaParams.deploymentRegions.forEach(deploymentRegion => {
-        eniclient[deploymentRegion] = new AWS.EC2({ region: deploymentRegion });
-    });
-
     for (let [key, value] of Object.entries(lambdaParams.clusterEndpoints)) {
         r53rcd[key] = new AWS.Route53RecoveryCluster({
             region: key,
@@ -46,8 +44,10 @@ const instantiateClients = () => {
 };
 instantiateClients();
 
+// Lambda Event Handler
 exports.handler = async (event, context) => {
-    if (paramErrors !== "") {
+    // Immediately return and log if missing parameters
+    if (paramErrors.length !== 0) {
         console.error(`${paramErrors.join(", ")} parameters are missing, aborting`);
         return "PARAMETERS_MISSING";
     }
@@ -57,8 +57,11 @@ exports.handler = async (event, context) => {
         console.log(`Context: ${JSON.stringify(context)}`);
         console.log(`Event: ${JSON.stringify(event)}`);
         
+        // First, query the Aurora Global Cluster Status
         const globalClusterStatus = await queryGlobalClusterStatus();
         //console.log(`globalClusterStatus: ${JSON.stringify(globalClusterStatus)}`);
+
+        // Exit if the Cluster is in a failing-over or error state
         if (globalClusterStatus.state === "failing-over") {
             console.log("Database cluster already failing over, taking no action");
             return "DATABASE_ALREADY_FAILING_OVER";
@@ -67,25 +70,20 @@ exports.handler = async (event, context) => {
             return "DATABASE_STATUS_ERROR";
         }
 
+        // Next, query the Route 53 Application Recovery Controller Routing Control States
         const routingControlStates = await queryRoutingControlStates();
-       
-        let targetRegion = [];
-        for (let [rcsRegion, rcsState] of Object.entries(routingControlStates)) {
-            if (rcsState == "On") {
-                targetRegion.push(rcsRegion);
-            }
-        }
-        console.log(`targetRegion: ${targetRegion}`);
 
-        if (targetRegion.length !== 1) {
+        // Exit if the target database is unclear due to Routing Control configuration
+        if (routingControlStates.numRegions !== 1) {
             console.log("Target database cluster unclear, taking no action");
             return "TARGET_DATABASE_UNCLEAR";
         } else {
-            if (!globalClusterStatus[lambdaParams.auroraClusterArns[targetRegion]]) {
+            // Check whether the globalClusterStatus Writer node ARN aligns with the routingControlStates Target Region, initiate failover if not
+            if (!globalClusterStatus[lambdaParams.auroraClusterArns[routingControlStates.targetRegion]]) {
                 console.log("Database is not active in target region, initiating failover");
                 const failoverRequestParams = {
                     GlobalClusterIdentifier: lambdaParams.auroraGlobalClusterId,
-                    TargetDbClusterIdentifier: lambdaParams.auroraClusterArns[targetRegion]
+                    TargetDbClusterIdentifier: lambdaParams.auroraClusterArns[routingControlStates.targetRegion]
                 };
                 //console.log(`failoverRequestParams: ${JSON.stringify(failoverRequestParams)}`);
     
@@ -110,8 +108,11 @@ exports.handler = async (event, context) => {
     
 };
 
+// Query Global Cluster Status:
 const queryGlobalClusterStatus = async () => {
-    const globalClusterStatus = {};
+    const globalClusterStatus = {
+        state: null
+    };
     const describeRequestParams = {
         GlobalClusterIdentifier: lambdaParams.auroraGlobalClusterId
     };
@@ -121,10 +122,12 @@ const queryGlobalClusterStatus = async () => {
         const describeResponse = await rdsclient.describeGlobalClusters(describeRequestParams).promise();
         //console.log(`DescribeResponse: ${JSON.stringify(describeResponse)}`);
         
+        // Ensure only a single GlobalClusters entry is returned for the provided auroraGlobalClusterId
         if (describeResponse.GlobalClusters.length != 1) {
             console.error("Unexpected Global Cluster count");
             globalClusterStatus.state = "error";
         } else {
+            // Track GlobalCluster Status and build array of members indicating which is the Writer
             globalClusterStatus.state = describeResponse.GlobalClusters[0].Status;
             //console.log(`GlobalClusterMembers: ${JSON.stringify(describeResponse.GlobalClusters[0].GlobalClusterMembers)}`);
             describeResponse.GlobalClusters[0].GlobalClusterMembers.forEach(member => {
@@ -140,11 +143,20 @@ const queryGlobalClusterStatus = async () => {
     return globalClusterStatus;
 };
 
+// Query Routing Control States:
 const queryRoutingControlStates = async () => {
-    let routingControlStates = {};
-    for (let [epRegion, epURL] of Object.entries(lambdaParams.clusterEndpoints)) {
-        //console.log(`queryRoutingControlStates in region ${epRegion}`);
-        for (let [rcRegion, rcArn] of Object.entries(lambdaParams.routingControlArns)) {
+    let routingControlStates = {
+        numRegions: 0,
+        targetRegion: null,
+        state: null
+    };
+
+    // Iterate through a loop of Routing Control Regions / ARNs
+    for (let [rcRegion, rcArn] of Object.entries(lambdaParams.routingControlArns)) {
+
+        // In each case iterate through Endpoint Regions
+        for (let [epRegion, epURL] of Object.entries(lambdaParams.clusterEndpoints)) {
+            //console.log(`queryRoutingControlStates in region ${epRegion}`);
             const getRoutingControlStateParams = {
                 RoutingControlArn: rcArn
             };
@@ -152,14 +164,20 @@ const queryRoutingControlStates = async () => {
             try {
                 const getRoutingControlStateResponse = await r53rcd[epRegion].getRoutingControlState(getRoutingControlStateParams).promise();
                 //console.log(`getRoutingControlStateResponse: ${JSON.stringify(getRoutingControlStateResponse)}`);
-                routingControlStates[rcRegion] = getRoutingControlStateResponse.RoutingControlState;
+
+                // If this Routing Control is On, set activeRegion to this region.  Also, increment numRegions for validation checks before failover
+                if (getRoutingControlStateResponse.RoutingControlState === "On") {
+                    routingControlStates.numRegions++;
+                    routingControlStates.targetRegion = rcRegion;
+                }
             } catch (error) {
                 console.error('getRoutingControlStateResponse Error '+error);
                 routingControlStates.state = "error";
             }
-        }
 
-        if (routingControlStates.state !== "error") { break; }
+            // Break the loops if a successful response is received, otherwise continue through Endpoint Regions until a successful response is received
+            if (routingControlStates.state !== "error") { break; }
+        }
     }
     
     //console.log(`routingControlStates: ${JSON.stringify(routingControlStates)}`);

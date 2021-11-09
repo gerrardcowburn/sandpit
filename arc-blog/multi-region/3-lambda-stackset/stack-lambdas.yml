@@ -366,6 +366,7 @@ Resources:
       Role: !If [PrimaryRegion, !GetAtt FailoverLambdaRole.Arn, !Sub 'arn:aws:iam::${AWS::AccountId}:role/${ProjectId}-FailoverLambdaRole']
       Runtime: nodejs12.x
       Handler: failover-lambda.handler
+      Timeout: 5
       Layers:
         - !Ref FailoverLambdaLayerSDK
       Environment:
