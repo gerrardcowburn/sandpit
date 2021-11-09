@@ -9,11 +9,13 @@ c. Database Stack - Database level infrastructure including KMS Keys, Secrets, D
 
 Please be mindful that the resources deployed for the purposes of this sample will cost approx. $1/hr. Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required. 
 
-Stacks must be deleted from the StackSet in the reverse order they were provisioned, i.e. us-west-2 first and us-east-1 second. Also ensure the database is active in us-east-1 before deleting.
-
-**Technical Prerequisites:**
+### Deployment Activities
 * The three nested stack templates, `stack-network.yml`, `stack-app.yml`, and `stack-network.yml` must be uploaded to an S3 Bucket which is either public, or accessible via the IAM credentials used for the StackSet deployment.
 * The name of this S3 Bucket must be updated in the `TemplatePath` mapping in the `stack-master.yml` file prior to initiation of deployment. The name should be in the format _bucketname_.s3._region_
+
+### Deletion Activities
+* The database must be active in us-east-1 to avoid issues in Stack deletion.
+* Stacks must be deleted from the StackSet in the reverse order they were provisioned, i.e. us-west-2 first and us-east-1 second.
 
 **Notes:**
 * Sensible defaults for almost all configuration options are provided in the "Mappings" section of the `stack-master.yml` template to accelerate deployment of the collective infrastructure. These may be edited prior to deployment but doing so may result in unexpected behaviour.
