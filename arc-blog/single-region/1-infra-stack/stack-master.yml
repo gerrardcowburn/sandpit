@@ -32,10 +32,10 @@ Mappings:
 Parameters:
   ProjectId:
     Type: String
-    Description: Please enter a Project ID or Name which will be used for naming objects created by this template.
+    Description: Please enter a Project ID or Name which will be used for naming objects created by this template.  Must begin with a letter, contain only alphanumeric characters, and be shorter than 10 characters.
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    MaxLength: 15
-    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
+    MaxLength: 10
+    ConstraintDescription: Must begin with a letter, contain only alphanumeric characters, and be shorter than 10 characters.
     Default: arcblog
 
 Resources:

@@ -10,7 +10,6 @@ This *2-arc-stack* should be deployed as a standard Stack in us-east-1, within a
 Please be mindful that the resources deployed for the purposes of this sample will cost approx. $2.50/hr.  Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required.
 
 Please note that after deployment of this template, you will need to enable the routing controls in the AWS console [based on the guidance here](https://docs.aws.amazon.com/r53recovery/latest/dg/routing-control.update.html).  Based on the safety rules configured as part of this deployment, you will need to enable the routing controls in the following order:
-1. arcblog-Cell1-us-east1Aurora
 1. arcblog-Cell1-us-east-1a, arcblog-Cell1-us-east-1b, arcblog-Cell1-us-east-1c (You may choose to only enable 2 of these controls)
 2. arcblog-Cell1-us-east1
 

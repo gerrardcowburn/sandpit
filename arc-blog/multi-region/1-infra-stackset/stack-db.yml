@@ -83,7 +83,7 @@ Resources:
     Description: Global Database Cluster
     Properties:
       Engine: aurora-postgresql
-      EngineVersion: '11.9'
+      EngineVersion: '12.8'
       GlobalClusterIdentifier: !Sub ${ProjectId}-global-cluster
       StorageEncrypted: true
 

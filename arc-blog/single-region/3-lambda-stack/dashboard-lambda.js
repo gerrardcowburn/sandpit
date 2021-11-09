@@ -1,11 +1,12 @@
 /*jshint multistr: true */
 /*jshint esversion: 8 */
 
+// Require dependencies
 const { Resolver } = require('dns').promises;
 const AWS = require('aws-sdk');
 
+// Set up required parameters for Lambda operation based on environment variables
 const lambdaParams = {};
-let paramErrors = [];
 lambdaParams.deploymentRegions = process.env.DeploymentRegions ? JSON.parse(process.env.DeploymentRegions) : null;
 lambdaParams.vpcIds = process.env.VpcIds ? JSON.parse(process.env.VpcIds) : null;
 lambdaParams.resolvers = process.env.Resolvers || "10.0.0.2";
@@ -13,6 +14,8 @@ lambdaParams.dns = process.env.Dns || "app.arcblog.aws";
 lambdaParams.maxRows = process.env.MaxRows || 30;
 lambdaParams.checkInterval = process.env.CheckInterval || 5;
 
+// Catch errors in missing parameters for logging and exit
+let paramErrors = [];
 if (!lambdaParams.deploymentRegions) {
     paramErrors.push("DeploymentRegions");
 }
@@ -20,6 +23,8 @@ if (!lambdaParams.vpcIds) {
     paramErrors.push("VpcIds");
 }
 
+// Instantiate required AWS SDK Clients:
+// EC2 Client across all deploymentRegions
 const ec2client = {};
 const instantiateClients = () => {
     lambdaParams.deploymentRegions.forEach(deploymentRegion => {
@@ -28,13 +33,16 @@ const instantiateClients = () => {
 };
 instantiateClients();
 
+// Instantiate DNS resolver client and set resolvers
 const resolver = new Resolver();
 resolver.setServers([lambdaParams.resolvers]);
 
+// Lambda Handler
 exports.handler = async (event) => {
     console.log(event);
     console.log(`HTTP Path: ${event.path}`);
 
+    // Craft blank response
     let response = {
         "statusCode": null,
         "statusDescription": null,
@@ -45,6 +53,7 @@ exports.handler = async (event) => {
         }
     };
 
+    // Exit early if any paramters are missing
     if (paramErrors.length > 0) {
         console.error(`${paramErrors.join(", ")} parameters are missing, aborting`);
         response = constructBlankResponse(response);
@@ -52,25 +61,25 @@ exports.handler = async (event) => {
         return response;
     }
 
+    // Handle 3 different request types: / = serve dashboard, /api or /api/ = serve API response to dashboard, everything else = send 500 error
     switch (event.path) {
         case '/':
-            console.log("constructDynamicResponse");
             response = await constructDynamicResponse(response, event);
             break;
-            case '/api':
-            case '/api/':
-            console.log("constructApiResponse");
+        case '/api':
+        case '/api/':
             response = await constructEniBasedApiResponse(response, event);
             break;
         default: 
-            console.log("default");
             response = constructBlankResponse(response);
     }
 
+    // Send response
     console.log(`response: ${JSON.stringify(response)}`);
     return response;
 };
 
+// Set const containing style content for inclusion in other HTTP responses
 const htmlStyle = `<style>
         body {
             font-family: Arial, sans-serif;
@@ -95,6 +104,7 @@ const htmlStyle = `<style>
         }
     </style>`;
 
+// Set const containing script content for inclusion in other HTTP responses
 const responseScript = `<script>
             const table = document.querySelector('#response-table');
             const tbody = table.querySelector('tbody');
@@ -136,6 +146,7 @@ const responseScript = `<script>
             }, ${lambdaParams.checkInterval * 1000});
         </script>`;
 
+// Function to add relevant elements to the response for invalid / unexpected requests
 const constructBlankResponse = (response) => {
     response.body = "";
     response.statusCode = 500;
@@ -144,13 +155,14 @@ const constructBlankResponse = (response) => {
     return response;
 };
 
+// Function to construct the dashboard HTML in response to a request for /
 const constructDynamicResponse = async (response) => {
     const responsebody = `
 <html>
-    <title>Dashboard Lambda</title>
+    <title>Status Dashboard</title>
     ${htmlStyle}
     <body>
-        <h1>Dashboard Lambda</h1>
+        <h1>Status Dashboard</h1>
         <h2>Response Summary for ${lambdaParams.dns}</h2>
         <table id="response-table" class="center">
             <thead>
@@ -176,17 +188,22 @@ const constructDynamicResponse = async (response) => {
     return response;
 };
 
+// Function to construct the API response to the dashboard, based on a mapping of DNS query responses to NLB ENI IPs
 const constructEniBasedApiResponse = async (response) => {
-    console.log("Performing query for "+lambdaParams.dns);
+    //console.log("Performing query for "+lambdaParams.dns);
 
+    // Perform DNS query
     const dnsQueryResponse = await buildDnsQueryResponse(lambdaParams.dns);
 
+    // Construct NLB ENI IP mapping
     const eniAZMapping = await buildEniAZMapping();
 
-    const responseDate = new Date;
+    // Record current date/time for response
+    const responseDate = new Date();
     const responseTime = responseDate.toTimeString().split(" ")[0];
-    console.log(`responseTime: ${responseTime}`);
+    //console.log(`responseTime: ${responseTime}`);
 
+    // Add relevant API elements to response
     response.body = `{ "responseBody": "${eniAZMapping[dnsQueryResponse[0]] || "Maintenance" }", "responseTime": "${responseTime}" }`;
     response.statusCode = 200;
     response.statusDescription = "200 OK";
@@ -194,29 +211,33 @@ const constructEniBasedApiResponse = async (response) => {
     return response;
 };
 
+// Function to query DNS resolvers for a given record
 const buildDnsQueryResponse = async (dns) => {
-    console.log(`triggered buildDnsQueryArray, ${dns}`);
+    //console.log(`triggered buildDnsQueryArray, ${dns}`);
     const dnsQueryOptions = {
         ttl: false
     };
     
+    // Perform DNS query and construct array of responses
     let dnsQueryResponse = [];
     try {
         dnsQueryResponse = await resolver.resolve4(dns, dnsQueryOptions);
-        console.log('DNS resolution succeeded');
+        //console.log('DNS resolution succeeded');
     } catch (error) {
         console.error('DNS resolution failed '+error);
     }
     
-    console.log(`dnsQueryResponse: ${JSON.stringify(dnsQueryResponse)}`);
+    //console.log(`dnsQueryResponse: ${JSON.stringify(dnsQueryResponse)}`);
     return dnsQueryResponse;
 };
 
+// Function to build a mapping of NLB ENIs to IPs
 const buildEniAZMapping = async () => {
     const ipArray = {};
     const describeNetworkInterfacesParams = {
     };    
     
+    // Iterate through deploymentRegions and perform EC2 describeNetworkInterfacesResponse 
     for (let i = 0; i < lambdaParams.deploymentRegions.length; i++) {
         try {
             const describeNetworkInterfacesResponse = await ec2client[lambdaParams.deploymentRegions[i]].describeNetworkInterfaces(describeNetworkInterfacesParams).promise();
@@ -229,7 +250,7 @@ const buildEniAZMapping = async () => {
             console.error('ENI AZ Mapping failed '+error);
         }
     }
-    console.log(`ipArray: ${JSON.stringify(ipArray)}`);
+    //console.log(`ipArray: ${JSON.stringify(ipArray)}`);
     return ipArray;
 };
 

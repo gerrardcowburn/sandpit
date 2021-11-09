@@ -14,7 +14,7 @@ $ ./build.sh
 * Perform the `Build Activities` outlined above.  This simply zips the two Lambda scripts included in this folder into zip files for use during Lambda deployment.
 * Upload the two Lambda deployment zip files created above, and the js-sdk-2.958.zip in this repository, to S3 buckets in both deployment regions (us-east-1 and us-west-2).  These buckets must either be public, or accessible via the IAM credentials used for the StackSet deployment.
 * Update the `LambdaCodeS3Bucket` mapping in both regions of the RegionalParameters Mappings section of the template, based on the S3 buckets used in the step above.
-* Deploy the `stack-lambdas.yml` as a StackSet with the primary/first deployment region set to us-east-1 and the secondary/second deployment region set to us-west-2.  Provide all required input parameters based on the resources deployed by the Application and Route 53 Application Recovery Controller stacks.
+* Deploy the `stack-lambdas.yml` as a StackSet with sequential regional deployment with the primary/first deployment region set to us-east-1 and the secondary/second deployment region set to us-west-2.  Provide all required input parameters based on the resources deployed by the Application and Route 53 Application Recovery Controller stacks.
 
 
 **Notes:**

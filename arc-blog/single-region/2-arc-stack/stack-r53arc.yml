@@ -23,9 +23,10 @@ Mappings:
 Parameters:
   ProjectId:
     Type: String
-    Description: Please enter a Project ID or Name which will be used for naming objects created by this template.
+    Description: Please enter a Project ID or Name which will be used for naming objects created by this template.  Must begin with a letter, contain only alphanumeric characters, and be shorter than 10 characters.
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
+    MaxLength: 10
+    ConstraintDescription: Must begin with a letter, contain only alphanumeric characters, and be shorter than 10 characters.
     Default: arcblog
   Region1VpcId:
     Type: String
@@ -287,6 +288,7 @@ Resources:
 
   RoutingControlHealthcheckCell1:
     Type: AWS::Route53::HealthCheck
+    DependsOn: RoutingControlCell1
     Properties:
       HealthCheckConfig: 
         Type: RECOVERY_CONTROL
@@ -297,6 +299,7 @@ Resources:
 
   RoutingControlHealthcheckCell1A:
     Type: AWS::Route53::HealthCheck
+    DependsOn: RoutingControlCell1A
     Properties:
       HealthCheckConfig: 
         Type: RECOVERY_CONTROL
@@ -307,6 +310,7 @@ Resources:
 
   RoutingControlHealthcheckCell1B:
     Type: AWS::Route53::HealthCheck
+    DependsOn: RoutingControlCell1B
     Properties:
       HealthCheckConfig: 
         Type: RECOVERY_CONTROL
@@ -317,6 +321,7 @@ Resources:
 
   RoutingControlHealthcheckCell1C:
     Type: AWS::Route53::HealthCheck
+    DependsOn: RoutingControlCell1C
     Properties:
       HealthCheckConfig: 
         Type: RECOVERY_CONTROL

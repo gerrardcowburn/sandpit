@@ -1,9 +1,10 @@
 /*jshint esversion: 8 */
+
+// Require dependencies
 const AWS = require('aws-sdk');
 
-const REGION = process.env.AWS_REGION ? process.env.AWS_REGION : "us-east-1";
-
 // Set up required parameters for Lambda operation based on environment variables
+const REGION = process.env.AWS_REGION ? process.env.AWS_REGION : "us-east-1";
 const lambdaParams = {};
 lambdaParams.deploymentRegions = process.env.DeploymentRegions ? JSON.parse(process.env.DeploymentRegions) : null;
 lambdaParams.auroraGlobalClusterId = process.env.AuroraGlobalClusterId ? process.env.AuroraGlobalClusterId : null;
@@ -61,48 +62,53 @@ exports.handler = async (event, context) => {
         const globalClusterStatus = await queryGlobalClusterStatus();
         //console.log(`globalClusterStatus: ${JSON.stringify(globalClusterStatus)}`);
 
-        // Exit if the Cluster is in a failing-over or error state
+        // Exit early if the Cluster is in a failing-over or error state as no further action can be taken
         if (globalClusterStatus.state === "failing-over") {
             console.log("Database cluster already failing over, taking no action");
             return "DATABASE_ALREADY_FAILING_OVER";
         } else if (globalClusterStatus.state === "error") {
-            console.log("Database cluster status error, taking no action");
+            console.error("Database cluster status error, taking no action");
             return "DATABASE_STATUS_ERROR";
         }
 
         // Next, query the Route 53 Application Recovery Controller Routing Control States
         const routingControlStates = await queryRoutingControlStates();
 
-        // Exit if the target database is unclear due to Routing Control configuration
-        if (routingControlStates.numRegions !== 1) {
-            console.log("Target database cluster unclear, taking no action");
+        // Exit if the target database is unclear due to Routing Control configuration or failed alignment of globalClusterStatus with routingControlStates
+        // Typically this is a failure case which should be alerted on and handled accordingly
+        if (routingControlStates.numRegions !== 1 || globalClusterStatus[lambdaParams.auroraClusterArns[routingControlStates.targetRegion]] === undefined) {
+            console.error("Target database cluster unclear, taking no action");
             return "TARGET_DATABASE_UNCLEAR";
         } else {
-            // Check whether the globalClusterStatus Writer node ARN aligns with the routingControlStates Target Region, initiate failover if not
-            if (!globalClusterStatus[lambdaParams.auroraClusterArns[routingControlStates.targetRegion]]) {
-                console.log("Database is not active in target region, initiating failover");
+            // If globalClusterStatus Writer node ARN aligns with the routingControlStates Target Region, take no action
+            if (globalClusterStatus[lambdaParams.auroraClusterArns[routingControlStates.targetRegion]]) {
+                console.log("Database is active in target region, taking no action");
+                return "NO_ACTION_REQUIRED";
+            } 
+            // If globalClusterStatus Writer does not align with routingControlStates Target Region, initiate failover
+            else {
+                console.log(`Database is not active in target region, initiating failover to ${routingControlStates.targetRegion}`);
                 const failoverRequestParams = {
                     GlobalClusterIdentifier: lambdaParams.auroraGlobalClusterId,
                     TargetDbClusterIdentifier: lambdaParams.auroraClusterArns[routingControlStates.targetRegion]
                 };
                 //console.log(`failoverRequestParams: ${JSON.stringify(failoverRequestParams)}`);
     
+                // Initiate failover
                 try {
                     const failoverResponse = await rdsclient.failoverGlobalCluster(failoverRequestParams).promise();
                     console.log(`Failover Response: ${JSON.stringify(failoverResponse)}`);
                     return "REQUESTED_FAILOVER";
                 } catch (error) {
+                    // Typically this is a failure case which should be alerted on and handled accordingly
                     console.error(error);
                     return "ERROR_REQUESTING_FAILOVER";
                 }
-
-            } else {
-                console.log("Database is active in target region, taking no action");
-                return "NO_ACTION_REQUIRED";
             }
         }
 
     } catch (error) {
+        // Typically this is a failure case which should be alerted on and handled accordingly
         console.error('Handler error '+error);
     }
     
@@ -116,7 +122,6 @@ const queryGlobalClusterStatus = async () => {
     const describeRequestParams = {
         GlobalClusterIdentifier: lambdaParams.auroraGlobalClusterId
     };
-    //console.log(`describeRequestParams: ${describeRequestParams}`);
     
     try {
         const describeResponse = await rdsclient.describeGlobalClusters(describeRequestParams).promise();
@@ -148,13 +153,12 @@ const queryRoutingControlStates = async () => {
     let routingControlStates = {
         numRegions: 0,
         targetRegion: null,
-        state: null
     };
 
     // Iterate through a loop of Routing Control Regions / ARNs
     for (let [rcRegion, rcArn] of Object.entries(lambdaParams.routingControlArns)) {
-
-        // In each case iterate through Endpoint Regions
+        
+        // Iterate through Endpoint array
         for (let [epRegion, epURL] of Object.entries(lambdaParams.clusterEndpoints)) {
             //console.log(`queryRoutingControlStates in region ${epRegion}`);
             const getRoutingControlStateParams = {
@@ -165,19 +169,23 @@ const queryRoutingControlStates = async () => {
                 const getRoutingControlStateResponse = await r53rcd[epRegion].getRoutingControlState(getRoutingControlStateParams).promise();
                 //console.log(`getRoutingControlStateResponse: ${JSON.stringify(getRoutingControlStateResponse)}`);
 
-                // If this Routing Control is On, set activeRegion to this region.  Also, increment numRegions for validation checks before failover
+                // If successful response confirms this Routing Control is On, set targetRegion to this region.  Also, increment numRegions for validation checks before failover
                 if (getRoutingControlStateResponse.RoutingControlState === "On") {
                     routingControlStates.numRegions++;
                     routingControlStates.targetRegion = rcRegion;
+                    break;
+                } 
+                // If successful response confirms this Routing Control is Off, break the loop to avoid iterating through the rest of the endpoints unnecessarily
+                else if (getRoutingControlStateResponse.RoutingControlState === "Off") { 
+                    break;
                 }
-            } catch (error) {
+            } 
+            // If response is not successful, log error and continue iterating through endpoints seeking successful response
+            catch (error) {
                 console.error('getRoutingControlStateResponse Error '+error);
-                routingControlStates.state = "error";
             }
-
-            // Break the loops if a successful response is received, otherwise continue through Endpoint Regions until a successful response is received
-            if (routingControlStates.state !== "error") { break; }
         }
+
     }
     
     //console.log(`routingControlStates: ${JSON.stringify(routingControlStates)}`);
