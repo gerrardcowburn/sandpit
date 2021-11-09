@@ -90,6 +90,7 @@ Resources:
   DBCluster:
     Type: AWS::RDS::DBCluster
     Description: Database Cluster
+    DeletionPolicy: Delete
     Properties:
       DatabaseName: !If [PrimaryRegion, !Ref DBName, !Ref AWS::NoValue]
       DBClusterIdentifier: !Sub ${ProjectId}-cluster-${AWS::Region}
