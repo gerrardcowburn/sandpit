@@ -1,4 +1,4 @@
-# Route 53 ARC Blog Post - Multi Region Code
+# Route 53 Application Recovery Controller Blog Post - Multi Region Code
 
 This repository supports a blog post on Route 53 Application Recovery Controller.  It contains 3 independent but related groups of artifacts:
 1. `infra-stackset` is a collection of CloudFormation Nested StackSet templates which deploys base infrastructure components across two regions, used as a basis for modelling and understanding the Route 53 Application Recovery Controller functionality.  These components include networking, load balancers, autoscaling groups, and databases.
