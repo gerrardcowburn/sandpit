@@ -8,6 +8,8 @@ a. Recovery Readiness Groups, Cells, and Resource Sets
 b. Routing Control Clusters, Control Panels, Routing Controls, Safety Rules, and Healthchecks  
 c. Route 53 DNS Private Hosted Zone and associated DNS entries  
 
+Please be mindful that the resources deployed for the purposes of this sample will cost approx. $2.50/hr.  Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required.
+
 Please note that after deployment of this template, you will need to enable the routing controls in the AWS console [based on the guidance here](https://docs.aws.amazon.com/r53recovery/latest/dg/routing-control.update.html).  Based on the safety rules configured as part of this deployment, you will need to enable the routing controls in the following order:
 1. arcblog-Cell1Aurora-us-east-1
 2. arcblog-Cell1A-us-east-1, arcblog-Cell1B-us-east-1, arcblog-Cell1C-us-east-1 (You may choose to only enable 2 of these controls)

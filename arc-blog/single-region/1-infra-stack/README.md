@@ -2,10 +2,12 @@
 
 This CloudFormation (CFN) Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller.  It is the first part of a three part CFN Deployment, that is intended to be followed by *[2-arc-stack](https://github.com/harshawsharma/sandpit/tree/master/arc-blog/single-region/2-arc-stack)* and *[3-lambda-stack](https://github.com/harshawsharma/sandpit/tree/master/arc-blog/single-region/3-lambda-stack)*.  
 
-This CFN should be deployed as a StackSet with us-east-1 as the first region and us-west-2 as the second region, within a single AWS account.  It uses the CloudFormation Nested Stack approach, with 3 child stacks to deploy the following components across each target region:  
+This CFN should be deployed as a standard Stack in us-east-1, within a single AWS account.  It uses the CloudFormation Nested Stack approach, with 3 child stacks to deploy the following components across each target region:  
 a. Network Stack - Base level infrastructure including public/private subnets, Internet gateway, NAT gateway, route tables, etc.  
 b. Application Stack - Application level infrastructure including Network Load Balancers, AutoScaling Groups, etc.  
 c. Database Stack - Database level infrastructure including KMS Keys, Secrets, Database clusters and nodes, etc.  
+
+Please be mindful that the resources deployed for the purposes of this sample will cost approx. $1/hr.  Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required.
 
 **Technical Prerequisites:**
 * The three nested stack templates, `stack-network.yml`, `stack-app.yml`, and `stack-network.yml` must be uploaded to an S3 Bucket which is either public, or accessible via the IAM credentials used for the StackSet deployment.

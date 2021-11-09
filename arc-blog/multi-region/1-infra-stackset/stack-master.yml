@@ -10,6 +10,7 @@ Description: |
   This template is provided as a sample for educational purposes and should NOT be considered production ready.
 #  Note that this template is designed in a modular way, and most relevant possible variables are stored in the 'Mappings > StaticParameters' section of the template.
 #  These parameters can be modified by advanced users at their own risk.
+#  Note that the resources deployed using this template will cost approx. $2/hr.  Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required.
 
 Mappings:
   StaticParameters:

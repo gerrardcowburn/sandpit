@@ -9,6 +9,8 @@ Deployment requires artefacts to be uploaded to an S3 Bucket in each deployment 
 
 Please refer to the `README.md` files in each subfolder for further information regarding the deployment of each set of artefacts.
 
+Please be mindful that the resources deployed for the purposes of this sample will cost approx. $3.50/hr.  Please be sure to clean up all resources by deleting the CloudFormation Stacks when they are no longer required.
+
 **Note:**
 * Sensible defaults for almost all configuration options are provided in the "Mappings" section of the `stack-master.yml` template to accelerate deployment of the collective infrastructure. These may be edited prior to deployment but doing so may result in unexpected behaviour.
 * These templates assume familiarity and experience with AWS products and features such as CloudFormation StackSets, and prior account preparation according to the [guidelines available on this documentation is required](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs-self-managed.html).  If you have not used CloudFormation StackSets in your account prior to deploying these templates, please refer to this documentation before commencing.
