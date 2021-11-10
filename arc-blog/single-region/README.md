@@ -1,7 +1,7 @@
 # Route 53 Application Recovery Controller Blog Post - Single Region Code
 
 This repository supports a blog post on Route 53 Application Recovery Controller. It contains 3 independent but related groups of artefacts:
-1. `infra-stackset` is a collection of CloudFormation Nested Stack templates which deploys base infrastructure components across two regions, used as a basis for modelling and understanding the Route 53 Application Recovery Controller functionality. These components include networking, load balancers, autoscaling groups, and databases.
+1. `infra-stack` is a collection of CloudFormation Nested Stack templates which deploys base infrastructure components across two regions, used as a basis for modelling and understanding the Route 53 Application Recovery Controller functionality. These components include networking, load balancers, autoscaling groups, and databases.
 1. `arc-stack` is a CloudFormation Stack template which deploys all required Route 53 Application Recovery Controller components. It requires a wide range of parameters to be supplied based on the infrastructure deployment handled by #1.
 1. `lambda-stack` is a CloudFormation Stack template which deploys a Lambda function to support operation and understanding of the behaviour intended by #2. This Lambda function provides a 'dashboard' which shows the current real-world state of the infrastructure deployment based on DNS and API queries. 
 
