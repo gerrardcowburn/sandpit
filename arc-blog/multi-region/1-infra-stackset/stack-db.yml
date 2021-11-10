@@ -101,6 +101,7 @@ Resources:
       EnableIAMDatabaseAuthentication: true
       Engine: aurora-postgresql
       EngineMode: global
+      EngineVersion: '12.8'
       GlobalClusterIdentifier: !If [PrimaryRegion, !Ref DBGlobalCluster, !Sub '${ProjectId}-global-cluster'] 
       KmsKeyId: !Ref DBKMSKey
       MasterUsername: !If [PrimaryRegion, !Sub '{{resolve:secretsmanager:${DBSecret}:SecretString:username}}', !Ref AWS::NoValue]

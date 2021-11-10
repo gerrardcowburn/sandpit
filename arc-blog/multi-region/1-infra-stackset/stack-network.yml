@@ -154,6 +154,7 @@ Resources:
 
   PublicRouteTableIGWRoute:
     Type: "AWS::EC2::Route"
+    DependsOn: IGWAttachment
     Properties:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref IGW
