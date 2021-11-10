@@ -2,7 +2,7 @@
 
 This CloudFormation (CFN) Template supports the requirements of an AWS Blog Post on Route 53 Application Recovery Controller. It is the first part of a three part CFN Deployment, that is intended to be followed by *[2-arc-stack](https://github.com/aws-samples/route-53-application-recovery-controller/multi-region/2-arc-stack)* and *[3-lambda-stack](https://github.com/aws-samples/route-53-application-recovery-controller/multi-region/3-lambda-stack)*. 
 
-This CFN should be deployed as a StackSet with sequential regional deployment to us-east-1 as the first region and us-west-2 as the second region, within a single AWS account. It uses the CloudFormation Nested Stack approach, with 3 child stacks to deploy the following components across each target region:  
+This CFN should be deployed as a StackSet using self-service permissions, with sequential regional deployment to us-east-1 as the first region and us-west-2 as the second region, within a single AWS account. It uses the CloudFormation Nested Stack approach, with 3 child stacks to deploy the following components across each target region:  
 a. Network Stack - Base level infrastructure including public/private subnets, Internet gateway, NAT gateway, route tables, etc. 
 b. Application Stack - Application level infrastructure including Network Load Balancers, AutoScaling Groups, etc. 
 c. Database Stack - Database level infrastructure including KMS Keys, Secrets, Database clusters and nodes, etc. 
