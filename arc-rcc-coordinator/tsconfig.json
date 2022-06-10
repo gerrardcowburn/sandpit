@@ -1,0 +1,9 @@
+{
+    "extends": "@tsconfig/node14/tsconfig.json",
+    "compilerOptions": {
+        "lib": ["dom", "ES2018"]
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
