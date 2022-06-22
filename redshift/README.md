@@ -1,0 +1,1 @@
+Basic Lambda Function to react to an EventBridge aws.redshift-data Event, read the Task Token mapped to the Statement ID from a basic DynamoDB table, and return the TaskToken to Step Functions to continue processing logic.
