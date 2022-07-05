@@ -1,3 +1,4 @@
+"use strict";
 /*
 Please see the README.md on the GitHub AWS Data Exchange Samples repository for a more detailed overview with links to relevant AWS documentation.
 
@@ -9,14 +10,15 @@ based Data Sets.  This will typically consist of three main stages:
     (This stage will remain consistent across all uses of a given Product.
 3. Define the request-specific parameters based on your business need.
     (This stage will likely change for every request)
+Both TypeScript and native JavaScript examples are provided.  The instructions below assume working with the JavaScript file, but the same will work
+with the TypeScript file subject to it being transpiled after updates as normal.
 
 To get started, sign in to the AWS Management Console, browse to AWS Data Exchange, search for the "AWS Data Exchange for APIs (Test product)"
 Product, and subscribe.
 Copy the relevant DataSetId, RevisionId, and AssetId from the Entitled Data page and paste them into the productInfo constant below
 (you will likely find they match the sample contents).  Next, update the sendApiAssetCommandInput constant based on your desired request
-parameters.  Again, for test purposes, the provided inputs should work just fine.  Finally, transpile the script from TypeScript to
-Javascript, and execute it with `node adx4apis`.
-///UPDATE ABOVE TO INCLUDE INSTALLING CLIENTS?
+parameters.  Again, for test purposes, the provided inputs should work just fine.  Finally, install the necessary dependencies
+(@aws-sdk/client-dataexchange) using `npm install` and then execute the script with `node adx4api`.
 
 To assist with finding the necessary inputs for the productInfo and sendApiAssetCommandInput constants, the Data Exchange console provides
 Sample CLI requests as shown below.  The first 3 parameters map to the productInfo constant, and the rest map to sendApiAssetCommandInput
@@ -34,8 +36,9 @@ By default, this code will authenticate against AWS Data Exchange using the conf
 For local development purposes, this will typically use credentials provided to the AWS CLI by `aws configure`
 When running on Amazon EC2 it will typically use the EC2 Instance Profile, and for AWS Lambda it will use the Lambda Execution Role.
 */
+Object.defineProperty(exports, "__esModule", { value: true });
 //Import all relevant Clients and Interfaces from the @aws-sdk/client-dataexchange SDK
-import { DataExchangeClient, SendApiAssetCommand } from "@aws-sdk/client-dataexchange";
+const client_dataexchange_1 = require("@aws-sdk/client-dataexchange");
 //Populate DataExchangeClientConfig with Region and Logger requirements
 const dataExchangeClientConfig = {
     region: "us-east-1",
@@ -47,7 +50,7 @@ const dataExchangeClientConfig = {
     }
 };
 //Instantiate DataExchangeClient
-const dataExchangeClient = new DataExchangeClient(dataExchangeClientConfig);
+const dataExchangeClient = new client_dataexchange_1.DataExchangeClient(dataExchangeClientConfig);
 //Populate productInfo object based on SendApiAssetCommandInput interface, providing just the mandatory parameters which will be consistent across requests.  The examples below are the AWS Data Exchange for APIs (Test product) in us-east-1
 const productInfo = {
     DataSetId: "8d494cba5e4720e5f6072e280daf70a8",
@@ -55,28 +58,30 @@ const productInfo = {
     AssetId: "4e94198cfdb8400793fb3f0411861960"
 };
 //Populate sendApiAssetCommandInput object based on SendApiAssetCommand interface by merging productInfo object with additional request specific parameters
-const sendApiAssetCommandInput = Object.assign(Object.assign({}, productInfo), { 
+const sendApiAssetCommandInput = {
+    ...productInfo,
     //This can be GET, PUT, POST, etc. depending on the Provider API
-    Method: "POST", 
+    Method: "POST",
     //This depends on the Provider API and data being requested
-    Path: "/", 
+    Path: "/",
     //These depend on the Provider API and should be provided as a JSON Object
     QueryStringParameters: {
         param1: "value1",
         param2: "value2"
-    }, 
+    },
     //These depend on the Provider API and should be provided as a JSON Object.  Note that the AWS Data Exchange Test API product requires "Content-Type": "application/json"
     RequestHeaders: {
         "Content-Type": "application/json"
-    }, 
+    },
     //This depends on the Provider API
     Body: JSON.stringify({
         body_param: "body_param_value"
-    }) });
+    })
+};
 //Create asynchronous function to make an ADX for APIs Subscriber Call
 async function makeAdxForApiSubscriberCall(sendApiAssetCommandInput) {
     //Instantiate SendApiAssetCommand
-    const sendApiAssetCommand = new SendApiAssetCommand(sendApiAssetCommandInput);
+    const sendApiAssetCommand = new client_dataexchange_1.SendApiAssetCommand(sendApiAssetCommandInput);
     //Send command using DataExchangeClient
     try {
         const sendApiAssetCommandOutput = await dataExchangeClient.send(sendApiAssetCommand);
