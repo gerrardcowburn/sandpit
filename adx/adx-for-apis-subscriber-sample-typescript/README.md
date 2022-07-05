@@ -1,6 +1,6 @@
 # README
 
-This code is provided as a sample of how to use the AWS Data Exchange Client Software Development Kit to connect to Data Exchange For APIs based Data Sets.  This will typically consist of three main stages:
+This code is provided as a sample of how to use the AWS Data Exchange Client Software Development Kit (SDK) to connect to Data Exchange For APIs based Data Sets.  This will typically consist of three main stages:
 1. Import relevant SDK Clients and Interfaces, establish base Client configuration, and instantiate the Client. \
 _(This stage will remain consistent across all potential AWS Data Exchange for APIs use cases)_
 2. Define the relevant Provider / Product specific identities) \
@@ -10,7 +10,7 @@ _(This stage will likely change for every request)_
 
 ## Getting Started
 To get started, sign in to the AWS Management Console, browse to AWS Data Exchange, search for the ["AWS Data Exchange for APIs (Test product)"][APITestProduct] Product, and subscribe.
-Copy the relevant `DataSetId`, `RevisionId`, and `AssetId` from the Entitled Data page and paste them into the `productInfo` constant below (you will likely find they match the sample contents).  Next, update the `sendApiAssetCommandInput` constant based on your desired request parameters.  Again, for test purposes, the provided inputs should work just fine.  Finally, transpile the script from TypeScript to Javascript, and execute it with `node adx4apis`.
+Copy the relevant `DataSetId`, `RevisionId`, and `AssetId` from the Entitled Data page and paste them into the `productInfo` constant in the code sample (adx4apis.ts) (you will likely find they match the sample contents).  Next, update the `sendApiAssetCommandInput` constant based on your desired request parameters.  Again, for test purposes, the provided inputs should work just fine.  Finally, transpile the script from TypeScript to Javascript, and execute it with `node adx4apis`.
 
 To assist with finding the necessary inputs for the `productInfo` and `sendApiAssetCommandInput` constants, the Data Exchange console provides Sample CLI requests as shown below.  The first 3 parameters map to the productInfo constant, and the rest map to sendApiAssetCommandInput
 ```

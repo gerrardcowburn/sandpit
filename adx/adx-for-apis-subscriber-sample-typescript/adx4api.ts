@@ -1,5 +1,7 @@
 /*
-This code is provided as a sample of how to use the AWS Data Exchange Client Software Development Kit to connect to Data Exchange For APIs
+Please see the README.md on the GitHub AWS Data Exchange Samples repository for a more detailed overview with links to relevant AWS documentation.
+
+This code is provided as a sample of how to use the AWS Data Exchange Client Software Development Kit (SDK) to connect to Data Exchange For APIs
 based Data Sets.  This will typically consist of three main stages:
 1. Import relevant SDK Clients and Interfaces, establish base Client configuration, and instantiate the Client.
     (This stage will remain consistent across all potential AWS Data Exchange for APIs use cases)
@@ -50,7 +52,7 @@ const dataExchangeClientConfig: DataExchangeClientConfig = {
 //Instantiate DataExchangeClient
 const dataExchangeClient = new DataExchangeClient(dataExchangeClientConfig);
 
-//Populate productInfo object based on SendApiAssetCommandInput interface, providing just the mandatory parameters which will be consistent across requests.  The examples below are the AWS Data Exchange for APIs (Test product)
+//Populate productInfo object based on SendApiAssetCommandInput interface, providing just the mandatory parameters which will be consistent across requests.  The examples below are the AWS Data Exchange for APIs (Test product) in us-east-1
 const productInfo: SendApiAssetCommandInput = {
     DataSetId: "8d494cba5e4720e5f6072e280daf70a8",
     RevisionId: "32559097c7d209b02af6de5cad4385fe",
