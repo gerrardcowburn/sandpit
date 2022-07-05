@@ -1,0 +1,14 @@
+{
+  "name": "adx-for-apis-subscriber-sample-typescript",
+  "version": "1.0.0",
+  "description": "Typescript sample ADX for APIs subscriber activity",
+  "main": "adx4api.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Gerrard Cowburn",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dataexchange": "^3.121.0"
+  }
+}
