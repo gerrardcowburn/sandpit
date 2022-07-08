@@ -14,7 +14,7 @@ To get started, sign in to the AWS Management Console, browse to AWS Data Exchan
 Product, and subscribe.
 Copy the relevant DataSetId, RevisionId, and AssetId from the Entitled Data page and paste them into the productInfo constant below
 
-Familiarity with go programming language is assume. For go programming language documentation visit: https://go.dev/doc/tutorial/getting-started
+Familiarity with go programming language is assumed. For go programming language documentation visit: https://go.dev/doc/tutorial/getting-started
 
 To assist with finding the necessary inputs for the productInfo and sendApiAssetInput values, the Data Exchange console provides
 Sample CLI requests as shown below.  The first 3 parameters map to the productInfo constant, and the rest map to sendApiAssetInput
@@ -41,7 +41,6 @@ import (
 	"fmt"
 	"log"
 
-	//    "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 )
