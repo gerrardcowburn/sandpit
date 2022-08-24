@@ -1,23 +1,25 @@
 /*
 Please see the README.md on the GitHub AWS Data Exchange Samples repository for a more detailed overview with links to relevant AWS documentation.
 
-This code is provided as a sample of how to use the AWS Data Exchange Client Software Development Kit (SDK) to connect to Data Exchange For APIs
-based Data Sets.  This will typically consist of three main stages:
+This sample code will show you how to integrate with the [AWS Data Exchange for APIs (Test Product)][APITestProduct]. This simple test product 
+echoes the request sent to it, so you can try out different HTTP Methods (GET, POST, etc.), Query String Parameters, Headers, and Body content 
+as you explore API based data consumption.  By the end of this exercise you'll know how to use the [AWS Data Exchange Client Software Development 
+Kit (SDK)][Tools] with [JavaScript / Node.JS][AWSDataExchangeSDKForJavaScript] to make a `SendApiAsset` request to an API based AWS Data Exchange product.  
+
+This will typically consist of three main stages:
 1. Import relevant SDK Clients and Interfaces, establish base Client configuration, and instantiate the Client.
     (This stage will remain consistent across all potential AWS Data Exchange for APIs use cases)
 2. Define the relevant Provider / Product specific identities)
     (This stage will remain consistent across all uses of a given Product.
 3. Define the request-specific parameters based on your business need.
     (This stage will likely change for every request)
-Both TypeScript and native JavaScript examples are provided.  The instructions below assume working with the JavaScript file, but the same will work
-with the TypeScript file subject to it being transpiled after updates as normal.
 
 To get started, sign in to the AWS Management Console, browse to AWS Data Exchange, search for the "AWS Data Exchange for APIs (Test product)"
 Product, and subscribe.
 Copy the relevant DataSetId, RevisionId, and AssetId from the Entitled Data page and paste them into the productInfo constant below
 (you will likely find they match the sample contents).  Next, update the sendApiAssetCommandInput constant based on your desired request
 parameters.  Again, for test purposes, the provided inputs should work just fine.  Finally, install the necessary dependencies
-(@aws-sdk/client-dataexchange) using `npm install` and then execute the script with `node adx4api`.
+(@aws-sdk/client-dataexchange) using `npm install`, transpile from TypeScript to Javascript using `tsc`, and then execute the script with `node adx4api`.
 
 To assist with finding the necessary inputs for the productInfo and sendApiAssetCommandInput constants, the Data Exchange console provides
 Sample CLI requests as shown below.  The first 3 parameters map to the productInfo constant, and the rest map to sendApiAssetCommandInput
@@ -91,12 +93,16 @@ async function makeAdxForApiSubscriberCall (sendApiAssetCommandInput: SendApiAss
     //Send command using DataExchangeClient
     try {
         const sendApiAssetCommandOutput: SendApiAssetCommandOutput = await dataExchangeClient.send(sendApiAssetCommand);
-    } catch (err) {
+        console.log("Output");
+        console.log(sendApiAssetCommandOutput);
+        } catch (err) {
         //Log errors
-        console.log("Error")
+        console.error("Error")
         console.error(err);
     }
 }
 
 //Invoke function to make ADX for APIs Subscriber Call
-makeAdxForApiSubscriberCall(sendApiAssetCommandInput);
+(async () => {
+    await makeAdxForApiSubscriberCall(sendApiAssetCommandInput);
+})();
